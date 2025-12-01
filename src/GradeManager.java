@@ -1,0 +1,136 @@
+import java.util.ArrayList;
+import java.util.Comparator;
+
+public class GradeManager {
+
+    private Grade[] grades = new Grade[200];
+    private int gradeCount = 0;
+
+    // ------------------ Add Grade ------------------
+    public void addGrade(Grade grade) {
+        if (gradeCount < grades.length) {
+            grades[gradeCount++] = grade;
+        } else {
+            System.out.println("Grade storage full!");
+        }
+    }
+
+    // ------------------ View Grades for a Student ------------------
+    public void viewGradeByStudent(int studentId) {
+        ArrayList<Grade> studentGrades = new ArrayList<>();
+
+        // Collect grades
+        for (int i = 0; i < gradeCount; i++) {
+            if (grades[i].getStudentId() == studentId) {
+                studentGrades.add(grades[i]);
+            }
+        }
+
+        if (studentGrades.isEmpty()) {
+            System.out.println("No grades recorded for this student.");
+            return;
+        }
+
+        studentGrades.sort(Comparator.comparing(Grade::getDate).reversed());
+
+        System.out.println("\n--------- GRADE REPORT FOR STUDENT " + studentId + " ---------");
+        System.out.printf("%-8s %-12s %-20s %-10s %-8s\n",
+                "GradeID", "Date", "Subject", "Type", "Grade");
+        System.out.println("-------------------------------------------------------------");
+
+        for (Grade g : studentGrades) {
+            String status = getStatus(g.getGrade());
+            System.out.printf("%-8d %-12s %-20s %-10s %-8.2f %-8s\n",
+                    g.getGradeId(),
+                    g.getDate(),
+                    g.getSubject().getSubjectName(),
+                    g.getSubject().getSubjectType(),
+                    g.getGrade(),
+                    status
+            );
+        }
+
+
+
+        System.out.println("-------------------------------------------------------------");
+
+        // Show averages
+        double coreAvg = calculateCoreAverage(studentId);
+        double electAvg = calculateElectiveAverage(studentId);
+        double overallAvg = calculateOverallAverage(studentId);
+
+        System.out.println("Core Subjects Average: " +
+                (coreAvg == -1 ? "N/A" : String.format("%.2f", coreAvg)));
+
+        System.out.println("Elective Subjects Average: " +
+                (electAvg == -1 ? "N/A" : String.format("%.2f", electAvg)));
+
+        System.out.println("Current Average: " +
+                (overallAvg == -1 ? "N/A" : String.format("%.2f", overallAvg)));
+
+
+
+        System.out.println("-------------------------------------------------------------\n");
+    }
+
+    // ------------------ Averages ------------------
+    public double calculateCoreAverage(int studentId) {
+        double total = 0;
+        int count = 0;
+
+        for (int i = 0; i < gradeCount; i++) {
+            Grade g = grades[i];
+            if (g.getStudentId() == studentId &&
+                    g.getSubject().getSubjectType().equals("Core")) {
+                total += g.getGrade();
+                count++;
+            }
+        }
+
+        return count == 0 ? -1 : total / count;
+    }
+
+    public double calculateElectiveAverage(int studentId) {
+        double total = 0;
+        int count = 0;
+
+        for (int i = 0; i < gradeCount; i++) {
+            Grade g = grades[i];
+            if (g.getStudentId() == studentId &&
+                    g.getSubject().getSubjectType().equals("Elective")) {
+                total += g.getGrade();
+                count++;
+            }
+        }
+
+        return count == 0 ? -1 : total / count;
+    }
+
+    public double calculateOverallAverage(int studentId) {
+        double total = 0;
+        int count = 0;
+
+        for (int i = 0; i < gradeCount; i++) {
+            Grade g = grades[i];
+            if (g.getStudentId() == studentId) {
+                total += g.getGrade();
+                count++;
+            }
+        }
+
+        return count == 0 ? -1 : total / count;
+    }
+
+    public String getStatus(double grade) {
+        if (grade >= 50) {
+            return "PASS";
+        } else {
+            return "FAIL";
+        }
+    }
+
+
+    public int getGradeCount() {
+        return gradeCount;
+    }
+}
