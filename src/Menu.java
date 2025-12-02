@@ -141,7 +141,7 @@ public class Menu {
         }
 
         if (selected == null) {
-            System.out.println("❌ Student not found!");
+            System.out.println("Student not found!");
             return;
         }
 
