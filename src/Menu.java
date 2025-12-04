@@ -13,8 +13,6 @@ public class Menu {
 
     public static void main(String[] args) {
 
-        addDefaultStudents();
-
         boolean running = true;
 
         while (running) {
@@ -55,21 +53,7 @@ public class Menu {
         System.out.print("Enter choice: ");
     }
 
-    // ADD DEFAULT STUDENTS
-    public static void addDefaultStudents() {
-        students.add(new RegularStudent(studentIdCounter++, "Alice Brown", 20, "alice@mail.com", "0240000000"));
-        students.add(new RegularStudent(studentIdCounter++, "John Mensah", 22, "john@mail.com", "0241111111"));
-        students.add(new RegularStudent(studentIdCounter++, "Ama Serwaa", 21, "ama@mail.com", "0242222222"));
 
-        students.add(new HonorsStudent(studentIdCounter++, "Kofi Asare", 23, "kofi@mail.com", "0243333333"));
-        students.add(new HonorsStudent(studentIdCounter++, "Sandra Owusu", 19, "sandra@mail.com", "0244444444"));
-
-        students.get(0).setAverageGrade(72);
-        students.get(1).setAverageGrade(55);
-        students.get(2).setAverageGrade(49);
-        students.get(3).setAverageGrade(83);
-        students.get(4).setAverageGrade(65);
-    }
 
     // ADD STUDENT
     public static void addStudent() {
@@ -110,18 +94,60 @@ public class Menu {
 
     // VIEW STUDENTS
     public static void viewStudents() {
-        System.out.println("\nSTUDENT LIST");
-        System.out.printf("%-6s %-20s %-10s %-12s %-10s\n",
-                "STU ID", "NAME", "TYPE", "AVG GRADE", "STATUS");
-        System.out.println("------------------------------------------------------");
-
-        for (Student s : students) {
-            System.out.printf("%-6d %-20s %-10s %-12.2f %-10s\n",
-                    s.id, s.name, s.getType(), s.getAverageGrade(), s.status);
+        if (students.isEmpty()) {
+            System.out.println("\nNo students have been added to the system.\n");
+            return;
         }
 
-        System.out.println("------------------------------------------------------\n");
+        System.out.println("\nSTUDENT LIST");
+        System.out.printf("%-6s %-20s %-10s %-12s %-10s %-10s %-12s\n",
+                "ID", "NAME", "TYPE", "AVG GRADE", "SUBJECTS", "STATUS", "PASSING GRADE");
+        System.out.println("----------------------------------------------------------------------------------------");
+
+        double totalGrades = 0;
+        int countGrades = 0;
+
+        int displayCount = Math.min(students.size(), 5);
+        for (int i = 0; i < displayCount; i++) {
+            Student s = students.get(i);
+            double avg = s.getAverageGrade();
+
+            if (avg > 0) {
+                totalGrades += avg;
+                countGrades++;
+            }
+
+            System.out.printf("%-6d %-20s %-10s %-12.2f %-10d %-10s %-12d\n",
+                    s.id,
+                    s.name,
+                    s.getType(),
+                    avg,
+                    s.getEnrolledSubjects(),
+                    s.getStatus(),
+                    s.getPassingGrade()
+            );
+
+            if (s instanceof HonorsStudent && avg >= s.getPassingGrade()) {
+                System.out.println("Honors Eligible!");
+            }
+        }
+
+        System.out.println("----------------------------------------------------------------------------------------");
+
+        System.out.println("Total Students: " + students.size());
+
+        if (countGrades > 0) {
+            System.out.printf("Class Average Grade: %.2f\n", (totalGrades / countGrades));
+        } else {
+            System.out.println("Class Average Grade: N/A");
+        }
+
+        System.out.println();
     }
+
+
+
+
 
     // RECORD GRADE
     public static void recordGrade() {

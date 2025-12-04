@@ -10,7 +10,12 @@ public class HonorsStudent extends Student {
     }
 
     @Override
-    public double getPassingGrade() {
-        return 60.0;
+    public int getPassingGrade() {
+        return (int) 60.0;
+    }
+
+    @Override
+    public String getStatus() {
+        return (averageGrade >= 60) ? "Passing  " : "Failing";
     }
 }

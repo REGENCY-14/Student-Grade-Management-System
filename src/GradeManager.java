@@ -10,10 +10,36 @@ public class GradeManager {
     public void addGrade(Grade grade) {
         if (gradeCount < grades.length) {
             grades[gradeCount++] = grade;
+            updateStudentAverage(grade.getStudentId());
         } else {
             System.out.println("Grade storage full!");
         }
     }
+
+    private void updateStudentAverage(int studentId) {
+        double total = 0;
+        int count = 0;
+
+        for (int i = 0; i < gradeCount; i++) {
+            if (grades[i].getStudentId() == studentId) {
+                total += grades[i].getGrade();
+                count++;
+            }
+        }
+
+        Student s = findStudentById(studentId);
+        if (s != null && count > 0) {
+            s.setAverageGrade(total / count);
+        }
+    }
+
+    private Student findStudentById(int studentId) {
+        for (Student s : Menu.students) {
+            if (s.id == studentId) return s;
+        }
+        return null;
+    }
+
 
     // ------------------ View Grades for a Student ------------------
     public void viewGradeByStudent(int studentId) {
@@ -39,7 +65,9 @@ public class GradeManager {
         System.out.println("-------------------------------------------------------------");
 
         for (Grade g : studentGrades) {
-            String status = getStatus(g.getGrade());
+            Student student = findStudentById(g.getStudentId());
+            String status = (student != null) ? student.getStatus() : "N/A";
+
             System.out.printf("%-8d %-12s %-20s %-10s %-8.2f %-8s\n",
                     g.getGradeId(),
                     g.getDate(),
@@ -121,16 +149,31 @@ public class GradeManager {
         return count == 0 ? -1 : total / count;
     }
 
-    public String getStatus(double grade) {
-        if (grade >= 50) {
-            return "PASS";
-        } else {
-            return "FAIL";
-        }
-    }
+//    public String getStatus(double grade) {
+//        if (grade >= 50) {
+//            return "PASS";
+//        } else {
+//            return "FAIL";
+//        }
+//    }
 
 
     public int getGradeCount() {
         return gradeCount;
     }
+
+    public int getSubjectCountForStudent(int studentId) {
+        int count = 0;
+        for (int i = 0; i < gradeCount; i++) {
+            if (grades[i].getStudentId() == studentId) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+
+
 }
+
+

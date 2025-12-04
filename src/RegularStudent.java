@@ -10,7 +10,16 @@ public class RegularStudent extends Student {
     }
 
     @Override
-    public double getPassingGrade() {
-        return 50.0;
+    public int getPassingGrade() {
+        return (int) 50.0;
     }
+
+    @Override
+    public String getStatus() {
+        return (averageGrade >= 50) ? "Passing" : "Failing";
+    }
+
+
+
+
 }
