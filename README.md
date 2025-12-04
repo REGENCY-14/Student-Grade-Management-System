@@ -55,7 +55,6 @@ This is a **console-based Student Grade Management System** built using Java. Th
 * **RegularStudent & HonorsStudent**: Extend `Student`, represent different student types with different passing grade thresholds.
 * **Subject (Abstract Class)**: Base class for subjects with `subjectName` and `subjectCode`. Abstract methods: `displaySubjectDetails()`, `getSubjectType()`.
 * **CoreSubject & ElectiveSubject**: Extend `Subject`, define mandatory and optional subjects.
-* **Gradable (Interface)**: Defines methods `recordGrade(double grade)` and `validateGrade(double grade)`.
 * **Grade**: Represents a student's grade for a subject, with unique grade ID, student ID, subject, grade value, and date.
 * **GradeManager**: Manages all grades, calculates averages, determines PASS/FAIL, and displays grade reports.
 * **StudentManagement**: Manages student array, adding, searching, viewing all students, and calculating class average.
@@ -65,7 +64,7 @@ This is a **console-based Student Grade Management System** built using Java. Th
 
 ## Object-Oriented Principles Used
 
-* **Abstraction**: `Student` and `Subject` abstract classes, `Gradable` interface.
+* **Abstraction**: `Student` and `Subject` abstract classes.
 * **Inheritance**: `RegularStudent` & `HonorsStudent` extend `Student`; `CoreSubject` & `ElectiveSubject` extend `Subject`.
 * **Polymorphism**: Treating `CoreSubject` and `ElectiveSubject` as `Subject`; using `Student` references for both Regular and Honors students.
 * **Encapsulation**: Private fields with getters and setters in `Grade` and `Student`.
