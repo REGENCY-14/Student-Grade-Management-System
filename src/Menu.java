@@ -29,6 +29,10 @@ public class Menu {
             } else if (choice == 4) {
                 viewGradeReport();
             } else if (choice == 5) {
+                System.out.println("Enter student ID: ");
+                int studentId = scanner.nextInt();
+                viewStudentGPAReport(studentId);
+            } else if (choice == 6) {
                 running = false;
                 System.out.println("Thank you for using grade management system!");
                 System.out.println("Goodbye");
@@ -37,6 +41,7 @@ public class Menu {
             }
         }
     }
+
 
     // MAIN MENU
     public static void mainMenu() {
@@ -48,7 +53,8 @@ public class Menu {
         System.out.println("2. View Students");
         System.out.println("3. Record Grade");
         System.out.println("4. View Grade Report");
-        System.out.println("5. Exit");
+        System.out.println("5. Calculate Student GPA");
+        System.out.println("6. Exit");
 
         System.out.print("Enter choice: ");
     }
@@ -223,10 +229,12 @@ public class Menu {
         }
 
         Grade newGrade = new Grade(id, subject, g);
+//        newGrade.displayGradeDetails();
+        String demoString = "Hello";
 
         gradeManager.addGrade(newGrade);
 
-        System.out.println("\n✔ Grade recorded successfully!");
+        System.out.println("\n Grade recorded successfully!");
         newGrade.displayGradeDetails();
     }
 
@@ -240,4 +248,75 @@ public class Menu {
 
         gradeManager.viewGradeByStudent(id);
     }
+
+// CALCULATE STUDENT GPA
+    public static void viewStudentGPAReport(int studentId) {
+        Student student = null;
+        for (Student s : students) {
+            if (s.id == studentId) {
+                student = s;
+                break;
+            }
+        }
+
+        if (student == null) {
+            System.out.println("Student not found!");
+            return;
+        }
+
+        // Table Header
+        System.out.println("\nGPA REPORT FOR " + student.name);
+        System.out.printf("%-20s %-10s %-10s\n", "SUBJECT", "GRADE", "GPA POINTS");
+        System.out.println("----------------------------------------");
+
+        double totalGPA = 0.0;
+        int count = 0;
+
+        // Iterate over all grades in gradeManager
+        for (int i = 0; i < gradeManager.getGradeCount(); i++) {
+            Grade g = gradeManager.grades[i];
+            if (g.getStudentId() == studentId) {
+                double gpaPoints = student.gradeToGPA((int) g.getGrade());
+                System.out.printf("%-20s %-10.2f %-10.2f\n",
+                        g.getSubject().getSubjectName(),
+                        g.getGrade(),
+                        gpaPoints);
+                totalGPA += gpaPoints;
+                count++;
+            }
+        }
+
+        if (count == 0) {
+            System.out.println("No grades recorded for this student.");
+            return;
+        }
+
+        double cumulativeGPA = totalGPA / count;
+
+        // Letter Grade
+        String letterGrade;
+        if (cumulativeGPA >= 4.0) letterGrade = "A";
+        else if (cumulativeGPA >= 3.0) letterGrade = "B";
+        else if (cumulativeGPA >= 2.0) letterGrade = "C";
+        else if (cumulativeGPA >= 1.0) letterGrade = "D";
+        else letterGrade = "F";
+
+        // Rank
+        ArrayList<Student> rankedStudents = new ArrayList<>(students);
+        rankedStudents.sort((a, b) -> Double.compare(b.computeGPA(), a.computeGPA()));
+        int rank = 1;
+        for (Student s : rankedStudents) {
+            if (s.id == studentId) break;
+            rank++;
+        }
+
+        // Display Summary
+        System.out.println("----------------------------------------");
+        System.out.printf("CUMULATIVE GPA: %.2f\n", cumulativeGPA);
+        System.out.println("LETTER GRADE: " + letterGrade);
+        System.out.println("CLASS RANK: " + rank + "/" + students.size());
+        System.out.println("----------------------------------------\n");
+    }
+
+
 }

@@ -46,6 +46,36 @@ public class Student {
         return null;
     }
 
+    //Student GPA Calculation
+    public double computeGPA() {
+        int subjectCount = getEnrolledSubjects();
+        if (subjectCount == 0) {
+            return 0.0;
+        }
+
+        double totalGPA = 0.0;
+
+        for (int grade : Menu.gradeManager.getGradesForStudent(this.id)) {
+            totalGPA += gradeToGPA(grade);
+        }
+
+        return totalGPA / subjectCount;
+    }
+
+    double gradeToGPA(int grade) {
+        if (grade >= 80) return 4.0;
+        if (grade >= 70) return 3.0;
+        if (grade >= 60) return 2.0;
+        if (grade >= 50) return 1.0;
+        return 0.0;
+    }
+
+    // Store GPA in averageGrade
+    public void updateAverageGPA() {
+        this.averageGrade = computeGPA();
+    }
+
+
 }
 
 

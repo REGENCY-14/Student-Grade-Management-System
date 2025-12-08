@@ -21,4 +21,5 @@ public abstract class Subject {
     public abstract String getSubjectType();
 
     public abstract boolean isMandatory();
+
 }

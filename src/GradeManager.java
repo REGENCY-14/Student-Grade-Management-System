@@ -3,7 +3,7 @@ import java.util.Comparator;
 
 public class GradeManager {
 
-    private Grade[] grades = new Grade[200];
+    Grade[] grades = new Grade[200];
     private int gradeCount = 0;
 
     // ------------------ Add Grade ------------------
@@ -11,6 +11,10 @@ public class GradeManager {
         if (gradeCount < grades.length) {
             grades[gradeCount++] = grade;
             updateStudentAverage(grade.getStudentId());
+            Student s = findStudentById(grade.getStudentId());
+            if (s != null) {
+                s.updateAverageGPA();
+            }
         } else {
             System.out.println("Grade storage full!");
         }
@@ -82,7 +86,6 @@ public class GradeManager {
 
         System.out.println("-------------------------------------------------------------");
 
-        // Show averages
         double coreAvg = calculateCoreAverage(studentId);
         double electAvg = calculateElectiveAverage(studentId);
         double overallAvg = calculateOverallAverage(studentId);
@@ -149,14 +152,6 @@ public class GradeManager {
         return count == 0 ? -1 : total / count;
     }
 
-//    public String getStatus(double grade) {
-//        if (grade >= 50) {
-//            return "PASS";
-//        } else {
-//            return "FAIL";
-//        }
-//    }
-
 
     public int getGradeCount() {
         return gradeCount;
@@ -170,6 +165,17 @@ public class GradeManager {
             }
         }
         return count;
+    }
+
+    //Students Grade
+    public ArrayList<Integer> getGradesForStudent(int studentId) {
+        ArrayList<Integer> studentGrades = new ArrayList<>();
+        for (int i = 0; i < gradeCount; i++) {
+            if (grades[i].getStudentId() == studentId) {
+                studentGrades.add((int) grades[i].getGrade());
+            }
+        }
+        return studentGrades;
     }
 
 
