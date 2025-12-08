@@ -1,3 +1,6 @@
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -27,13 +30,15 @@ public class Menu {
                 recordGrade();
             } else if (choice == 4) {
                 viewGradeReport();
-            } else if (choice == 5) {
+            }else if(choice == 5){
+                exportGradeReport();
+            }else if (choice == 6) {
                 System.out.println("Enter student ID: ");
                 int studentId = scanner.nextInt();
                 viewStudentGPAReport(studentId);
-            } else if (choice == 6) {
-                viewClassStatistics();
             } else if (choice == 7) {
+                viewClassStatistics();
+            } else if (choice == 8) {
                 running = false;
                 System.out.println("Thank you for using grade management system!");
                 System.out.println("Goodbye");
@@ -54,9 +59,10 @@ public class Menu {
         System.out.println("2. View Students");
         System.out.println("3. Record Grade");
         System.out.println("4. View Grade Report");
-        System.out.println("5. Calculate Student GPA");
-        System.out.println("6. View Student Statistics");
-        System.out.println("7. Exit");
+        System.out.println("5. Export Grade Report");
+        System.out.println("6. Calculate Student GPA");
+        System.out.println("7. View Student Statistics");
+        System.out.println("8. Exit");
 
         System.out.print("Enter choice: ");
     }
@@ -479,6 +485,117 @@ public class Menu {
 
         System.out.println("===================================\n");
     }
+    
+    //Export Grade Report
+    public static void exportGradeReport() {
+        System.out.print("Enter student ID: ");
+        int id = scanner.nextInt();
+        scanner.nextLine();
+
+        Student selected = null;
+        for (Student s : students) {
+            if (s.id == id) {
+                selected = s;
+                break;
+            }
+        }
+
+        if (selected == null) {
+            System.out.println("Student not found!");
+            return;
+        }
+
+        // Count number of grades
+        int gradeCount = 0;
+        for (int i = 0; i < gradeManager.getGradeCount(); i++) {
+            if (gradeManager.grades[i].getStudentId() == id) {
+                gradeCount++;
+            }
+        }
+
+        System.out.println("\nSTUDENT INFORMATION");
+        System.out.println("Name: " + selected.name);
+        System.out.println("Type: " + selected.getType());
+        System.out.println("Grades Recorded: " + gradeCount);
+
+        System.out.println("\nChoose export format:");
+        System.out.println("1. Summary Report");
+        System.out.println("2. Detailed Report");
+        System.out.println("3. Both");
+        System.out.print("Enter choice: ");
+        int choice = scanner.nextInt();
+        scanner.nextLine();
+
+        System.out.print("Enter file name (without extension): ");
+        String fileName = scanner.nextLine();
+
+        boolean summary = (choice == 1 || choice == 3);
+        boolean detailed = (choice == 2 || choice == 3);
+
+        StringBuilder summaryContent = new StringBuilder();
+        StringBuilder detailedContent = new StringBuilder();
+
+        // -------- SUMMARY REPORT CONTENT --------
+        if (summary) {
+            summaryContent.append("STUDENT SUMMARY REPORT\n");
+            summaryContent.append("Name: ").append(selected.name).append("\n");
+            summaryContent.append("Type: ").append(selected.getType()).append("\n");
+            summaryContent.append("Total Grades: ").append(gradeCount).append("\n\n");
+        }
+
+        // -------- DETAILED REPORT CONTENT --------
+        if (detailed) {
+            detailedContent.append("DETAILED GRADE REPORT\n");
+            detailedContent.append("Name: ").append(selected.name).append("\n");
+            detailedContent.append("Type: ").append(selected.getType()).append("\n\n");
+
+            detailedContent.append(String.format("%-20s %-10s\n", "SUBJECT", "GRADE"));
+            detailedContent.append("------------------------------------\n");
+
+            for (int i = 0; i < gradeManager.getGradeCount(); i++) {
+                Grade g = gradeManager.grades[i];
+                if (g.getStudentId() == id) {
+                    detailedContent.append(String.format("%-20s %.2f\n",
+                            g.getSubject().getSubjectName(),
+                            g.getGrade()
+                    ));
+                }
+            }
+        }
+
+        // -------- FILE EXPORT --------
+        try {
+            if (summary) {
+                File file = new File(fileName + "_summary.txt");
+                try (FileWriter writer = new FileWriter(file)) {
+                    writer.write(summaryContent.toString());
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+                printExportInfo(file, "Summary");
+            }
+
+            if (detailed) {
+                File file = new File(fileName + "_detailed.txt");
+                try (FileWriter writer = new FileWriter(file)) {
+                    writer.write(detailedContent.toString());
+                }
+                printExportInfo(file, "Detailed");
+            }
+
+        } catch (IOException e) {
+            System.out.println("Error exporting report: " + e.getMessage());
+        }
+    }
+
+    private static void printExportInfo(File file, String type) {
+        System.out.println("\nReport exported successfully!");
+        System.out.println("File Name: " + file.getName());
+        System.out.println("Location: " + file.getAbsolutePath());
+        System.out.println("Size: " + file.length() + " bytes");
+        System.out.println("What file contains: " + type + " Report\n");
+    }
+
 
 
 }

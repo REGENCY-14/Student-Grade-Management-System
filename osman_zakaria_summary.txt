@@ -1,0 +1,5 @@
+STUDENT SUMMARY REPORT
+Name: Osman
+Type: Regular
+Total Grades: 6
+
