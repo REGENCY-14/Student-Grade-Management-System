@@ -10,7 +10,6 @@ public class Menu {
     static GradeManager gradeManager = new GradeManager();
 
 
-
     public static void main(String[] args) {
 
         boolean running = true;
@@ -33,6 +32,8 @@ public class Menu {
                 int studentId = scanner.nextInt();
                 viewStudentGPAReport(studentId);
             } else if (choice == 6) {
+                viewClassStatistics();
+            } else if (choice == 7) {
                 running = false;
                 System.out.println("Thank you for using grade management system!");
                 System.out.println("Goodbye");
@@ -54,11 +55,11 @@ public class Menu {
         System.out.println("3. Record Grade");
         System.out.println("4. View Grade Report");
         System.out.println("5. Calculate Student GPA");
-        System.out.println("6. Exit");
+        System.out.println("6. View Student Statistics");
+        System.out.println("7. Exit");
 
         System.out.print("Enter choice: ");
     }
-
 
 
     // ADD STUDENT
@@ -152,9 +153,6 @@ public class Menu {
     }
 
 
-
-
-
     // RECORD GRADE
     public static void recordGrade() {
         System.out.println("------------- RECORD GRADE ----------------");
@@ -239,9 +237,8 @@ public class Menu {
     }
 
 
-
     // VIEW GRADE REPORT
-     public static void viewGradeReport() {
+    public static void viewGradeReport() {
         System.out.print("Enter student ID: ");
         int id = scanner.nextInt();
         scanner.nextLine();
@@ -249,7 +246,7 @@ public class Menu {
         gradeManager.viewGradeByStudent(id);
     }
 
-// CALCULATE STUDENT GPA
+    // CALCULATE STUDENT GPA
     public static void viewStudentGPAReport(int studentId) {
         Student student = null;
         for (Student s : students) {
@@ -316,6 +313,171 @@ public class Menu {
         System.out.println("LETTER GRADE: " + letterGrade);
         System.out.println("CLASS RANK: " + rank + "/" + students.size());
         System.out.println("----------------------------------------\n");
+    }
+
+    // View class statistics
+    public static void viewClassStatistics() {
+        if (students.isEmpty() || gradeManager.getGradeCount() == 0) {
+            System.out.println("No students or grades recorded in the system yet.");
+            return;
+        }
+
+        System.out.println("===================================");
+        System.out.println("||       CLASS STATISTICS        ||");
+        System.out.println("===================================\n");
+
+        // 1️⃣ General Info
+        System.out.println("Total Students: " + students.size());
+        System.out.println("Total Grades Recorded: " + gradeManager.getGradeCount() + "\n");
+
+        // 2️⃣ Grade Distribution
+        int[] gradeCounts = new int[5]; // A, B, C, D, F
+        for (int i = 0; i < gradeManager.getGradeCount(); i++) {
+            double grade = gradeManager.grades[i].getGrade();
+            if (grade >= 90) gradeCounts[0]++;
+            else if (grade >= 80) gradeCounts[1]++;
+            else if (grade >= 70) gradeCounts[2]++;
+            else if (grade >= 60) gradeCounts[3]++;
+            else gradeCounts[4]++;
+        }
+
+        System.out.println("GRADE DISTRIBUTION");
+        String[] letters = {"A", "B", "C", "D", "F"};
+        int totalGrades = gradeManager.getGradeCount();
+        for (int i = 0; i < 5; i++) {
+            int barLength = (int) ((gradeCounts[i] / (double) totalGrades) * 40);
+            String bar = "█".repeat(barLength);
+            double percent = (gradeCounts[i] * 100.0) / totalGrades;
+            System.out.printf("%-5s: %-40s %5.1f%% (%d grades)\n",
+                    letters[i], bar, percent, gradeCounts[i]);
+        }
+        System.out.println();
+
+        // 3️⃣ Statistical Analysis
+        ArrayList<Double> allGrades = new ArrayList<>();
+        double sum = 0;
+        double max = -1;
+        double min = 101;
+        Grade maxGradeObj = null;
+        Grade minGradeObj = null;
+
+        for (int i = 0; i < gradeManager.getGradeCount(); i++) {
+            Grade g = gradeManager.grades[i];
+            double grade = g.getGrade();
+            allGrades.add(grade);
+            sum += grade;
+
+            if (grade > max) {
+                max = grade;
+                maxGradeObj = g;
+            }
+            if (grade < min) {
+                min = grade;
+                minGradeObj = g;
+            }
+        }
+
+        allGrades.sort(Double::compare);
+
+        double mean = sum / allGrades.size();
+        double median = allGrades.size() % 2 == 0 ?
+                (allGrades.get(allGrades.size() / 2 - 1) + allGrades.get(allGrades.size() / 2)) / 2.0 :
+                allGrades.get(allGrades.size() / 2);
+
+        // Mode
+        double mode = allGrades.get(0);
+        int maxCount = 1;
+        for (int i = 0; i < allGrades.size(); i++) {
+            int count = 0;
+            for (double g : allGrades) {
+                if (g == allGrades.get(i)) count++;
+            }
+            if (count > maxCount) {
+                maxCount = count;
+                mode = allGrades.get(i);
+            }
+        }
+
+        // Standard deviation
+        double variance = 0;
+        for (double g : allGrades) {
+            variance += Math.pow(g - mean, 2);
+        }
+        variance /= allGrades.size();
+        double stdDev = Math.sqrt(variance);
+        double range = max - min;
+
+        System.out.println("STATISTICAL ANALYSIS");
+        System.out.printf("Mean: %.2f\n", mean);
+        System.out.printf("Median: %.2f\n", median);
+        System.out.printf("Mode: %.2f\n", mode);
+        System.out.printf("Standard Deviation: %.2f\n", stdDev);
+        System.out.printf("Range: %.2f\n", range);
+        if (maxGradeObj != null) System.out.printf("Highest Grade: %.2f (Student ID: %d, Subject: %s)\n",
+                maxGradeObj.getGrade(), maxGradeObj.getStudentId(), maxGradeObj.getSubject().getSubjectName());
+        if (minGradeObj != null) System.out.printf("Lowest Grade: %.2f (Student ID: %d, Subject: %s)\n",
+                minGradeObj.getGrade(), minGradeObj.getStudentId(), minGradeObj.getSubject().getSubjectName());
+
+        System.out.println();
+
+        // 4️⃣ Subject Performance
+        System.out.println("SUBJECT PERFORMANCE");
+        double coreSum = 0, electiveSum = 0;
+        int coreCount = 0, electiveCount = 0;
+
+        ArrayList<String> subjects = new ArrayList<>();
+        ArrayList<Double> subjectTotals = new ArrayList<>();
+        ArrayList<Integer> subjectCounts = new ArrayList<>();
+
+        for (int i = 0; i < gradeManager.getGradeCount(); i++) {
+            Grade g = gradeManager.grades[i];
+            if (g.getSubject().getSubjectType().equals("Core")) {
+                coreSum += g.getGrade();
+                coreCount++;
+            } else {
+                electiveSum += g.getGrade();
+                electiveCount++;
+            }
+
+            String subjName = g.getSubject().getSubjectName();
+            if (!subjects.contains(subjName)) {
+                subjects.add(subjName);
+                subjectTotals.add(g.getGrade());
+                subjectCounts.add(1);
+            } else {
+                int index = subjects.indexOf(subjName);
+                subjectTotals.set(index, subjectTotals.get(index) + g.getGrade());
+                subjectCounts.set(index, subjectCounts.get(index) + 1);
+            }
+        }
+
+        System.out.printf("Average Core Subjects: %.2f\n", coreCount > 0 ? coreSum / coreCount : 0);
+        System.out.printf("Average Elective Subjects: %.2f\n", electiveCount > 0 ? electiveSum / electiveCount : 0);
+        System.out.println("Individual Subject Averages:");
+        for (int i = 0; i < subjects.size(); i++) {
+            System.out.printf("%-20s : %.2f\n", subjects.get(i), subjectTotals.get(i) / subjectCounts.get(i));
+        }
+        System.out.println();
+
+        // 5️⃣ Compare Student Types
+        int regularCount = 0, honorsCount = 0;
+        double regularSum = 0, honorsSum = 0;
+
+        for (Student s : students) {
+            if (s instanceof HonorsStudent) {
+                honorsCount++;
+                honorsSum += s.getAverageGrade();
+            } else {
+                regularCount++;
+                regularSum += s.getAverageGrade();
+            }
+        }
+
+        System.out.println("STUDENT TYPE COMPARISON");
+        System.out.printf("Regular Students: %d, Average: %.2f\n", regularCount, regularCount > 0 ? regularSum / regularCount : 0);
+        System.out.printf("Honors Students: %d, Average: %.2f\n", honorsCount, honorsCount > 0 ? honorsSum / honorsCount : 0);
+
+        System.out.println("===================================\n");
     }
 
 
