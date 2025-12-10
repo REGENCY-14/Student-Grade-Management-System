@@ -208,8 +208,7 @@ public class Menu {
             else if (choice == 2) subject = new CoreSubject("English", "C-ENG");
             else if (choice == 3) subject = new CoreSubject("Science", "C-SCI");
             else {
-                System.out.println("Invalid subject!");
-                return;
+                throw new SubjectNotFoundException("Invalid subject selection: " + choice);
             }
 
         } else if (type == 2) {
@@ -224,8 +223,7 @@ public class Menu {
             else if (choice == 2) subject = new ElectiveSubject("Art", "E-ART");
             else if (choice == 3) subject = new ElectiveSubject("Physical Education", "E-PE");
             else {
-                System.out.println("Invalid subject!");
-                return;
+                throw new SubjectNotFoundException("Invalid subject selection: " + choice);
             }
         }
 
