@@ -87,21 +87,20 @@ public class Menu {
             throw new InvalidStudentDataException("Age must be between 5 and 100. Received: " + age);
         }
 
-        String email = "";
+
+        System.out.print("Enter student email: ");
+        String email = scanner.nextLine();
         if (!email.contains("@") || !email.contains(".")) {
             throw new InvalidStudentDataException("Invalid email format: " + email);
         }
 
-        String phone = null;
+        System.out.print("Enter student phone: ");
+        String phone;
+        phone = scanner.nextLine();
+        phone = null;
         if (phone.length() < 10) {
             throw new InvalidStudentDataException("Phone number must be at least 10 digits.");
         }
-
-        System.out.print("Enter student email: ");
-        email = scanner.nextLine();
-
-        System.out.print("Enter student phone: ");
-        phone = scanner.nextLine();
 
         System.out.println("Select student type:");
         System.out.println("1. Regular Student");
