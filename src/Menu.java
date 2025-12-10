@@ -13,7 +13,7 @@ public class Menu {
     static GradeManager gradeManager = new GradeManager();
 
 
-    public static void main(String[] args) throws StudentNotFoundException, GradeStorageFullException, InvalidGradeException, SubjectNotFoundException, InvalidStudentDataException {
+    public static void main(String[] args) throws StudentNotFoundException, GradeStorageFullException, InvalidGradeException, SubjectNotFoundException, InvalidStudentDataException, FileImportException {
 
         boolean running = true;
 
@@ -612,7 +612,7 @@ public class Menu {
     }
 
     //BULK IMPORT GRADES
-    public static void bulkImportGrades() {
+    public static void bulkImportGrades() throws FileImportException {
         System.out.println("------------- BULK IMPORT GRADES ----------------");
 
         System.out.println("Place your CSV file in: ./imports/");
@@ -631,8 +631,7 @@ public class Menu {
 
         File file = new File(filePath);
         if (!file.exists()) {
-            System.out.println("File not found: " + filePath);
-            return;
+            throw new FileImportException("File not found: " + filePath);
         }
 
         System.out.println("Processing grades ...\n");
