@@ -1,4 +1,5 @@
 import exception.GradeStorageFullException;
+import exception.InvalidGradeException;
 import exception.StudentNotFoundException;
 
 import java.io.*;
@@ -14,7 +15,7 @@ public class Menu {
     static GradeManager gradeManager = new GradeManager();
 
 
-    public static void main(String[] args) throws StudentNotFoundException {
+    public static void main(String[] args) throws StudentNotFoundException, GradeStorageFullException, InvalidGradeException {
 
         boolean running = true;
 
@@ -165,7 +166,7 @@ public class Menu {
 
 
     // RECORD GRADE
-    public static void recordGrade() throws StudentNotFoundException, GradeStorageFullException {
+    public static void recordGrade() throws StudentNotFoundException, GradeStorageFullException, InvalidGradeException {
         System.out.println("------------- RECORD GRADE ----------------");
 
         System.out.print("Enter student ID: ");
@@ -233,8 +234,7 @@ public class Menu {
         scanner.nextLine();
 
         if (g < 0 || g > 100) {
-            System.out.println("Invalid grade! Must be between 0 and 100.");
-            return;
+            throw new InvalidGradeException("Grade must be between 0 and 100. Received: " + g);
         }
 
         Grade newGrade = new Grade(id, subject, g);
