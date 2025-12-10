@@ -13,7 +13,7 @@ public class Menu {
     static GradeManager gradeManager = new GradeManager();
 
 
-    public static void main(String[] args) throws StudentNotFoundException, GradeStorageFullException, InvalidGradeException, SubjectNotFoundException, InvalidStudentDataException, FileImportException {
+    public static void main(String[] args) throws StudentNotFoundException, GradeStorageFullException, InvalidGradeException, SubjectNotFoundException, InvalidStudentDataException, FileImportException, InvalidReportFormatException {
 
         boolean running = true;
 
@@ -502,7 +502,7 @@ public class Menu {
     }
     
     //Export Grade Report
-    public static void exportGradeReport() {
+    public static void exportGradeReport() throws InvalidReportFormatException {
         System.out.print("Enter student ID: ");
         int id = scanner.nextInt();
         scanner.nextLine();
@@ -600,6 +600,11 @@ public class Menu {
 
         } catch (IOException e) {
             System.out.println("Error exporting report: " + e.getMessage());
+        }
+
+        // Line 583 - Add validation:
+        if (choice < 1 || choice > 3) {
+            throw new InvalidReportFormatException("Invalid export format choice: " + choice);
         }
     }
 
