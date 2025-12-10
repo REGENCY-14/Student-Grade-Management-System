@@ -1,7 +1,4 @@
-import exception.GradeStorageFullException;
-import exception.InvalidGradeException;
-import exception.StudentNotFoundException;
-import exception.SubjectNotFoundException;
+import exception.*;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -16,7 +13,7 @@ public class Menu {
     static GradeManager gradeManager = new GradeManager();
 
 
-    public static void main(String[] args) throws StudentNotFoundException, GradeStorageFullException, InvalidGradeException, SubjectNotFoundException {
+    public static void main(String[] args) throws StudentNotFoundException, GradeStorageFullException, InvalidGradeException, SubjectNotFoundException, InvalidStudentDataException {
 
         boolean running = true;
 
@@ -76,7 +73,7 @@ public class Menu {
 
 
     // ADD STUDENT
-    public static void addStudent() {
+    public static void addStudent() throws InvalidStudentDataException {
         System.out.println("-------------- ADD STUDENT ----------------");
 
         System.out.print("Enter student name: ");
@@ -85,13 +82,26 @@ public class Menu {
         System.out.print("Enter student age: ");
         int age = scanner.nextInt();
         scanner.nextLine();
+        // After line 57 (after reading age), add:
+        if (age < 5 || age > 100) {
+            throw new InvalidStudentDataException("Age must be between 5 and 100. Received: " + age);
+        }
 
+        String email = "";
+        if (!email.contains("@") || !email.contains(".")) {
+            throw new InvalidStudentDataException("Invalid email format: " + email);
+        }
+
+        String phone = null;
+        if (phone.length() < 10) {
+            throw new InvalidStudentDataException("Phone number must be at least 10 digits.");
+        }
 
         System.out.print("Enter student email: ");
-        String email = scanner.nextLine();
+        email = scanner.nextLine();
 
         System.out.print("Enter student phone: ");
-        String phone = scanner.nextLine();
+        phone = scanner.nextLine();
 
         System.out.println("Select student type:");
         System.out.println("1. Regular Student");
