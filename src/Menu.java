@@ -1,6 +1,7 @@
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import exception.GradeStorageFullException;
+import exception.StudentNotFoundException;
+
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -13,7 +14,7 @@ public class Menu {
     static GradeManager gradeManager = new GradeManager();
 
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws StudentNotFoundException {
 
         boolean running = true;
 
@@ -36,9 +37,11 @@ public class Menu {
                 System.out.println("Enter student ID: ");
                 int studentId = scanner.nextInt();
                 viewStudentGPAReport(studentId);
-            } else if (choice == 7) {
+            }else if (choice == 7){
+                bulkImportGrades();
+            }else if (choice == 8) {
                 viewClassStatistics();
-            } else if (choice == 8) {
+            } else if (choice == 10) {
                 running = false;
                 System.out.println("Thank you for using grade management system!");
                 System.out.println("Goodbye");
@@ -61,8 +64,10 @@ public class Menu {
         System.out.println("4. View Grade Report");
         System.out.println("5. Export Grade Report");
         System.out.println("6. Calculate Student GPA");
-        System.out.println("7. View Student Statistics");
-        System.out.println("8. Exit");
+        System.out.println("7. Bulk Import Grades");
+        System.out.println("8. View Student Statistics");
+        System.out.println("9. Search Students");
+        System.out.println("10. Exit");
 
         System.out.print("Enter choice: ");
     }
@@ -160,7 +165,7 @@ public class Menu {
 
 
     // RECORD GRADE
-    public static void recordGrade() {
+    public static void recordGrade() throws StudentNotFoundException, GradeStorageFullException {
         System.out.println("------------- RECORD GRADE ----------------");
 
         System.out.print("Enter student ID: ");
@@ -244,7 +249,7 @@ public class Menu {
 
 
     // VIEW GRADE REPORT
-    public static void viewGradeReport() {
+    public static void viewGradeReport() throws StudentNotFoundException {
         System.out.print("Enter student ID: ");
         int id = scanner.nextInt();
         scanner.nextLine();
@@ -595,6 +600,150 @@ public class Menu {
         System.out.println("Size: " + file.length() + " bytes");
         System.out.println("What file contains: " + type + " Report\n");
     }
+
+    //BULK IMPORT GRADES
+    public static void bulkImportGrades() {
+        System.out.println("------------- BULK IMPORT GRADES ----------------");
+
+        System.out.println("Place your CSV file in: ./imports/");
+        System.out.println("\nRequired CSV Format:");
+        System.out.println("StudentID,SubjectName,SubjectType,Grade\n");
+        System.out.println("Example:");
+        System.out.println("1001,Mathematics,Core,85");
+        System.out.println("1003,Art,Elective,74\n");
+
+        System.out.print("Enter file name (without extension): ");
+        String fileName = scanner.nextLine().trim();
+
+        String filePath = "./imports/" + fileName + ".csv";
+
+        System.out.println("\nValidating file ...");
+
+        File file = new File(filePath);
+        if (!file.exists()) {
+            System.out.println("File not found: " + filePath);
+            return;
+        }
+
+        System.out.println("Processing grades ...\n");
+
+        int totalRows = 0;
+        int successCount = 0;
+        int failedCount = 0;
+
+        ArrayList<String> failedRecords = new ArrayList<>();
+
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+
+            String line;
+            int rowNum = 1;
+
+            while ((line = br.readLine()) != null) {
+                totalRows++;
+
+                String[] parts = line.split(",");
+
+                if (parts.length != 4) {
+                    failedRecords.add("Row " + rowNum + ": Invalid column count");
+                    failedCount++;
+                    rowNum++;
+                    continue;
+                }
+
+                String studentIdStr = parts[0].trim();
+                String subjectName = parts[1].trim();
+                String subjectType = parts[2].trim();
+                String gradeStr = parts[3].trim();
+
+                // Validate student ID
+                int studentId;
+                try {
+                    studentId = Integer.parseInt(studentIdStr);
+                } catch (Exception e) {
+                    failedRecords.add("Row " + rowNum + ": Invalid Student ID → " + studentIdStr);
+                    failedCount++;
+                    rowNum++;
+                    continue;
+                }
+
+                // Find student
+                Student student = null;
+                for (Student s : students) {
+                    if (s.id == studentId) {
+                        student = s;
+                        break;
+                    }
+                }
+                if (student == null) {
+                    failedRecords.add("Row " + rowNum + ": Student not found → " + studentId);
+                    failedCount++;
+                    rowNum++;
+                    continue;
+                }
+
+                // Validate subject type
+                Subject subject;
+                if (subjectType.equalsIgnoreCase("Core")) {
+                    subject = new CoreSubject(subjectName, "C-" + subjectName.substring(0, 3).toUpperCase());
+                } else if (subjectType.equalsIgnoreCase("Elective")) {
+                    subject = new ElectiveSubject(subjectName, "E-" + subjectName.substring(0, 3).toUpperCase());
+                } else {
+                    failedRecords.add("Row " + rowNum + ": Invalid subject type → " + subjectType);
+                    failedCount++;
+                    rowNum++;
+                    continue;
+                }
+
+                // Validate grade
+                double gradeValue;
+                try {
+                    gradeValue = Double.parseDouble(gradeStr);
+                } catch (Exception e) {
+                    failedRecords.add("Row " + rowNum + ": Grade not numeric → " + gradeStr);
+                    failedCount++;
+                    rowNum++;
+                    continue;
+                }
+
+                if (gradeValue < 0 || gradeValue > 100) {
+                    failedRecords.add("Row " + rowNum + ": Grade out of range → " + gradeValue);
+                    failedCount++;
+                    rowNum++;
+                    continue;
+                }
+
+                // SUCCESS: Add grade
+                Grade newGrade = new Grade(studentId, subject, gradeValue);
+                gradeManager.addGrade(newGrade);
+                successCount++;
+
+                rowNum++;
+            }
+
+        } catch (Exception e) {
+            System.out.println("Error while reading file: " + e.getMessage());
+            return;
+        }
+
+        // Print Summary
+        System.out.println("---------------- IMPORT SUMMARY ----------------");
+        System.out.println("Total Rows: " + totalRows);
+        System.out.println("Successfully Imported: " + successCount);
+        System.out.println("Failed: " + failedCount);
+
+        if (!failedRecords.isEmpty()) {
+            System.out.println("\nFAILED RECORDS:");
+            for (String error : failedRecords) {
+                System.out.println(error);
+            }
+        }
+
+        System.out.println("------------------------------------------------");
+        System.out.println("Import completed!");
+        System.out.println("Grades added to the system: " + successCount);
+        System.out.println("------------------------------------------------\n");
+    }
+
 
 
 

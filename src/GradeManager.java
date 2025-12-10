@@ -1,3 +1,6 @@
+import exception.StudentNotFoundException;
+import exception.GradeStorageFullException;
+
 import java.util.ArrayList;
 import java.util.Comparator;
 
@@ -7,18 +10,23 @@ public class GradeManager {
     private int gradeCount = 0;
 
     // ------------------ Add Grade ------------------
-    public void addGrade(Grade grade) {
+    //Implemented exception handling
+    public void addGrade(Grade grade) throws StudentNotFoundException, GradeStorageFullException {
+        Student s = findStudentById(grade.getStudentId());
+        if (s == null) {
+            throw new StudentNotFoundException("Student with ID " + grade.getStudentId() + " not found.");
+        }
+
+        // Continue only if student exists
         if (gradeCount < grades.length) {
             grades[gradeCount++] = grade;
             updateStudentAverage(grade.getStudentId());
-            Student s = findStudentById(grade.getStudentId());
-            if (s != null) {
-                s.updateAverageGPA();
-            }
+            s.updateAverageGPA();
         } else {
-            System.out.println("Grade storage full!");
+            throw new GradeStorageFullException("Cannot add grade. Storage limit of " + grades.length + " reached.");
         }
     }
+
 
     private void updateStudentAverage(int studentId) {
         double total = 0;
@@ -46,7 +54,13 @@ public class GradeManager {
 
 
     // ------------------ View Grades for a Student ------------------
-    public void viewGradeByStudent(int studentId) {
+    //Implemented exception handling
+    public void viewGradeByStudent(int studentId) throws StudentNotFoundException {
+        // 1️⃣ Check if student exists first
+        Student s = findStudentById(studentId);
+        if (s == null) {
+            throw new StudentNotFoundException("Student with ID " + studentId + " does not exist.");
+        }
         ArrayList<Grade> studentGrades = new ArrayList<>();
 
         // Collect grades
@@ -137,20 +151,25 @@ public class GradeManager {
         return count == 0 ? -1 : total / count;
     }
 
-    public double calculateOverallAverage(int studentId) {
+    //Implemented exception handling
+    public double calculateOverallAverage(int studentId) throws StudentNotFoundException {
+        if (findStudentById(studentId) == null) {
+            throw new StudentNotFoundException("Student with ID " + studentId + " not found.");
+        }
+
         double total = 0;
         int count = 0;
 
         for (int i = 0; i < gradeCount; i++) {
-            Grade g = grades[i];
-            if (g.getStudentId() == studentId) {
-                total += g.getGrade();
+            if (grades[i].getStudentId() == studentId) {
+                total += grades[i].getGrade();
                 count++;
             }
         }
 
         return count == 0 ? -1 : total / count;
     }
+
 
 
     public int getGradeCount() {
