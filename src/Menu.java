@@ -1,6 +1,7 @@
 import exception.GradeStorageFullException;
 import exception.InvalidGradeException;
 import exception.StudentNotFoundException;
+import exception.SubjectNotFoundException;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -15,7 +16,7 @@ public class Menu {
     static GradeManager gradeManager = new GradeManager();
 
 
-    public static void main(String[] args) throws StudentNotFoundException, GradeStorageFullException, InvalidGradeException {
+    public static void main(String[] args) throws StudentNotFoundException, GradeStorageFullException, InvalidGradeException, SubjectNotFoundException {
 
         boolean running = true;
 
@@ -84,6 +85,7 @@ public class Menu {
         System.out.print("Enter student age: ");
         int age = scanner.nextInt();
         scanner.nextLine();
+
 
         System.out.print("Enter student email: ");
         String email = scanner.nextLine();
@@ -166,7 +168,7 @@ public class Menu {
 
 
     // RECORD GRADE
-    public static void recordGrade() throws StudentNotFoundException, GradeStorageFullException, InvalidGradeException {
+    public static void recordGrade() throws StudentNotFoundException, GradeStorageFullException, InvalidGradeException, SubjectNotFoundException {
         System.out.println("------------- RECORD GRADE ----------------");
 
         System.out.print("Enter student ID: ");
