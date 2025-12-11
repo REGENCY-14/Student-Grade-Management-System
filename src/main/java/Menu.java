@@ -40,7 +40,9 @@ public class Menu {
                 bulkImportGrades();
             }else if (choice == 8) {
                 viewClassStatistics();
-            } else if (choice == 10) {
+            } else if (choice == 9){
+                searchStudents();
+            }else if (choice == 10) {
                 running = false;
                 System.out.println("Thank you for using grade management system!");
                 System.out.println("Goodbye");
@@ -97,7 +99,6 @@ public class Menu {
         System.out.print("Enter student phone: ");
         String phone;
         phone = scanner.nextLine();
-        phone = null;
         if (phone.length() < 10) {
             throw new InvalidStudentDataException("Phone number must be at least 10 digits.");
         }
@@ -757,7 +758,266 @@ public class Menu {
         System.out.println("------------------------------------------------\n");
     }
 
+// ==================== SEARCH STUDENTS (Option 9) ====================
+// ⭐ ADD ALL OF THESE METHODS HERE - AFTER bulkImportGrades() method
+
+    public static void searchStudents() {
+        System.out.println("============================================");
+        System.out.println("||         SEARCH STUDENTS               ||");
+        System.out.println("============================================");
+        System.out.println("Search By:");
+        System.out.println("1. Student ID");
+        System.out.println("2. Name (Partial Match)");
+        System.out.println("3. Grade Range");
+        System.out.println("4. Student Type (Regular/Honors)");
+        System.out.println("5. Back to Main Menu");
+        System.out.print("Enter choice: ");
+
+        int choice = scanner.nextInt();
+        scanner.nextLine();
+
+        ArrayList<Student> results = new ArrayList<>();
+
+        try {
+            switch (choice) {
+                case 1:
+                    results = searchByStudentId();
+                    break;
+                case 2:
+                    results = searchByName();
+                    break;
+                case 3:
+                    results = searchByGradeRange();
+                    break;
+                case 4:
+                    results = searchByStudentType();
+                    break;
+                case 5:
+                    return;
+                default:
+                    System.out.println("Invalid choice!");
+                    return;
+            }
+
+            displaySearchResults(results);
+
+        } catch (Exception e) {
+            System.out.println("Error during search: " + e.getMessage());
+        }
+    }
+
+    private static ArrayList<Student> searchByStudentId() {
+        ArrayList<Student> results = new ArrayList<>();
+
+        System.out.print("Enter Student ID: ");
+        int searchId = scanner.nextInt();
+        scanner.nextLine();
+
+        for (Student s : students) {
+            if (s.id == searchId) {
+                results.add(s);
+                break;
+            }
+        }
+
+        return results;
+    }
+
+    private static ArrayList<Student> searchByName() {
+        ArrayList<Student> results = new ArrayList<>();
+
+        System.out.print("Enter student name (or part of name): ");
+        String searchName = scanner.nextLine().toLowerCase().trim();
+
+        if (searchName.isEmpty()) {
+            System.out.println("Search name cannot be empty!");
+            return results;
+        }
+
+        for (Student s : students) {
+            if (s.name.toLowerCase().contains(searchName)) {
+                results.add(s);
+            }
+        }
+
+        return results;
+    }
+
+    private static ArrayList<Student> searchByGradeRange() {
+        ArrayList<Student> results = new ArrayList<>();
+
+        System.out.print("Enter minimum grade (0-100): ");
+        double minGrade = scanner.nextDouble();
+
+        System.out.print("Enter maximum grade (0-100): ");
+        double maxGrade = scanner.nextDouble();
+        scanner.nextLine();
+
+        if (minGrade < 0 || minGrade > 100 || maxGrade < 0 || maxGrade > 100) {
+            System.out.println("Invalid grade range! Grades must be between 0 and 100.");
+            return results;
+        }
+
+        if (minGrade > maxGrade) {
+            System.out.println("Minimum grade cannot be greater than maximum grade!");
+            return results;
+        }
+
+        for (Student s : students) {
+            double avgGrade = s.getAverageGrade();
+            if (avgGrade >= minGrade && avgGrade <= maxGrade && avgGrade > 0) {
+                results.add(s);
+            }
+        }
+
+        return results;
+    }
+
+    private static ArrayList<Student> searchByStudentType() {
+        ArrayList<Student> results = new ArrayList<>();
+
+        System.out.println("Select Student Type:");
+        System.out.println("1. Regular Students");
+        System.out.println("2. Honors Students");
+        System.out.print("Enter choice: ");
+
+        int typeChoice = scanner.nextInt();
+        scanner.nextLine();
+
+        String targetType = "";
+        if (typeChoice == 1) {
+            targetType = "Regular";
+        } else if (typeChoice == 2) {
+            targetType = "Honors";
+        } else {
+            System.out.println("Invalid student type!");
+            return results;
+        }
+
+        for (Student s : students) {
+            if (s.getType().equals(targetType)) {
+                results.add(s);
+            }
+        }
+
+        return results;
+    }
+
+    private static void displaySearchResults(ArrayList<Student> results) {
+        if (results.isEmpty()) {
+            System.out.println("\n❌ No students found matching your search criteria.\n");
+            return;
+        }
+
+        System.out.println("\n============================================");
+        System.out.println("||      SEARCH RESULTS                   ||");
+        System.out.println("============================================");
+        System.out.println("Found " + results.size() + " student(s)\n");
+
+        System.out.printf("%-6s %-20s %-10s %-8s %-12s %-12s %-10s %-12s\n",
+                "ID", "NAME", "AGE", "TYPE", "AVG GRADE", "SUBJECTS", "STATUS", "PASSING GRADE");
+        System.out.println("------------------------------------------------------------------------------------------------");
+
+        for (Student s : results) {
+            double avg = s.getAverageGrade();
+            int subjectCount = gradeManager.getSubjectCountForStudent(s.id);
+
+            System.out.printf("%-6d %-20s %-10d %-8s %-12.2f %-12d %-10s %-12d\n",
+                    s.id,
+                    s.name,
+                    s.age,
+                    s.getType(),
+                    avg > 0 ? avg : 0.0,
+                    subjectCount,
+                    s.getStatus(),
+                    s.getPassingGrade()
+            );
+        }
+
+        System.out.println("------------------------------------------------------------------------------------------------");
+
+        System.out.print("\nWould you like to see detailed information for any student? (y/n): ");
+        String response = scanner.nextLine().toLowerCase();
+
+        if (response.equals("y") || response.equals("yes")) {
+            System.out.print("Enter Student ID: ");
+            int detailId = scanner.nextInt();
+            scanner.nextLine();
+
+            try {
+                displayStudentDetailedInfo(detailId);
+            } catch (StudentNotFoundException e) {
+                System.out.println("Error: " + e.getMessage());
+            }
+        }
+
+        System.out.println();
+    }
+
+    private static void displayStudentDetailedInfo(int studentId) throws StudentNotFoundException {
+        Student student = null;
+        for (Student s : students) {
+            if (s.id == studentId) {
+                student = s;
+                break;
+            }
+        }
+
+        if (student == null) {
+            throw new StudentNotFoundException("Student with ID " + studentId + " not found.");
+        }
+
+        System.out.println("\n============================================");
+        System.out.println("||    DETAILED STUDENT INFORMATION       ||");
+        System.out.println("============================================");
+        System.out.println("Student ID: " + student.id);
+        System.out.println("Name: " + student.name);
+        System.out.println("Age: " + student.age);
+        System.out.println("Email: " + student.email);
+        System.out.println("Phone: " + student.phone);
+        System.out.println("Type: " + student.getType());
+        System.out.println("Status: " + student.status);
+        System.out.println("Passing Grade: " + student.getPassingGrade());
+        System.out.println("Average Grade: " + String.format("%.2f", student.getAverageGrade()));
+        System.out.println("Enrolled Subjects: " + student.getEnrolledSubjects());
+
+        int gradeCount = 0;
+        System.out.println("\n--- GRADES ---");
+        for (int i = 0; i < gradeManager.getGradeCount(); i++) {
+            Grade g = gradeManager.grades[i];
+            if (g.getStudentId() == studentId) {
+                System.out.printf("  %s (%s): %.2f - %s\n",
+                        g.getSubject().getSubjectName(),
+                        g.getSubject().getSubjectType(),
+                        g.getGrade(),
+                        g.getLetterGrade());
+                gradeCount++;
+            }
+        }
+
+        if (gradeCount == 0) {
+            System.out.println("  No grades recorded yet.");
+        }
+
+        try {
+            double coreAvg = gradeManager.calculateCoreAverage(studentId);
+            double electiveAvg = gradeManager.calculateElectiveAverage(studentId);
+
+            System.out.println("\n--- AVERAGES ---");
+            System.out.println("Core Average: " + (coreAvg == -1 ? "N/A" : String.format("%.2f", coreAvg)));
+            System.out.println("Elective Average: " + (electiveAvg == -1 ? "N/A" : String.format("%.2f", electiveAvg)));
+            System.out.println("Overall Average: " + String.format("%.2f", student.getAverageGrade()));
+            System.out.println("GPA: " + String.format("%.2f", student.computeGPA()));
+        } catch (Exception e) {
+            System.out.println("Error calculating averages: " + e.getMessage());
+        }
+
+        System.out.println("============================================\n");
+    }
 
 
 
 }
+
+
+
