@@ -1,0 +1,13 @@
+StudentID,SubjectName,SubjectType,Grade
+1000,Mathematics,Core,85
+1000,English,Core,78
+1000,Physics,Elective,90
+1001,Mathematics,Core,72
+1001,Chemistry,Elective,88
+1001,Social Studies,Core,81
+1002,English,Core,67
+1002,Biology,Elective,74
+1003,Mathematics,Core,93
+1003,Elective ICT,Elective,89
+1004,English,Core,55
+1004,Geography,Elective,62

@@ -1,0 +1,9 @@
+DETAILED GRADE REPORT
+Name: Osman 
+Type: Regular
+
+SUBJECT              GRADE     
+------------------------------------
+Mathematics          85.00
+English              78.00
+Physics              90.00
