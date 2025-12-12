@@ -111,15 +111,10 @@ public class Menu {
 
                 int id = studentIdCounter++;
 
-                if (type == 1) {
-                    students.add(new RegularStudent(id, name, age, email, phone));
-                    System.out.println("Regular student added!");
-                } else if (type == 2) {
-                    students.add(new HonorsStudent(id, name, age, email, phone));
-                    System.out.println("Honors student added!");
-                } else {
-                    throw new InvalidStudentDataException("Invalid student type choice: " + type);
-                }
+                Student newStudent = StudentFactory.createStudent(type, id, name, age, email, phone);
+                students.add(newStudent);
+                System.out.println(newStudent.getType() + " student added!");
+
 
                 System.out.println("--------------------------------------------");
                 valid = true; // exit loop if successful
@@ -918,88 +913,16 @@ public class Menu {
 
         System.out.println("------------------------------------------------------------------------------------------------");
 
-        System.out.print("\nWould you like to see detailed information for any student? (y/n): ");
-        String response = scanner.nextLine().toLowerCase();
-
-        if (response.equals("y") || response.equals("yes")) {
-            System.out.print("Enter Student ID: ");
-            int detailId = scanner.nextInt();
-            scanner.nextLine();
-
-            try {
-                displayStudentDetailedInfo(detailId);
-            } catch (StudentNotFoundException e) {
-                System.out.println("Error: " + e.getMessage());
-            }
-        }
 
         System.out.println();
     }
 
-    private static void displayStudentDetailedInfo(int studentId) throws StudentNotFoundException {
-        Student student = null;
-        for (Student s : students) {
-            if (s.id == studentId) {
-                student = s;
-                break;
-            }
-        }
 
-        if (student == null) {
-            throw new StudentNotFoundException("Student with ID " + studentId + " not found.");
-        }
 
-        System.out.println("\n============================================");
-        System.out.println("||    DETAILED STUDENT INFORMATION       ||");
-        System.out.println("============================================");
-        System.out.println("Student ID: " + student.id);
-        System.out.println("Name: " + student.name);
-        System.out.println("Age: " + student.age);
-        System.out.println("Email: " + student.email);
-        System.out.println("Phone: " + student.phone);
-        System.out.println("Type: " + student.getType());
-        System.out.println("Status: " + student.status);
-        System.out.println("Passing Grade: " + student.getPassingGrade());
-        System.out.println("Average Grade: " + String.format("%.2f", student.getAverageGrade()));
-        System.out.println("Enrolled Subjects: " + student.getEnrolledSubjects());
 
-        int gradeCount = 0;
-        System.out.println("\n--- GRADES ---");
-        for (int i = 0; i < gradeManager.getGradeCount(); i++) {
-            Grade g = gradeManager.grades[i];
-            if (g.getStudentId() == studentId) {
-                System.out.printf("  %s (%s): %.2f - %s\n",
-                        g.getSubject().getSubjectName(),
-                        g.getSubject().getSubjectType(),
-                        g.getGrade(),
-                        g.getLetterGrade());
-                gradeCount++;
-            }
-        }
 
-        if (gradeCount == 0) {
-            System.out.println("  No grades recorded yet.");
-        }
 
-        try {
-            double coreAvg = gradeManager.calculateCoreAverage(studentId);
-            double electiveAvg = gradeManager.calculateElectiveAverage(studentId);
-
-            System.out.println("\n--- AVERAGES ---");
-            System.out.println("Core Average: " + (coreAvg == -1 ? "N/A" : String.format("%.2f", coreAvg)));
-            System.out.println("Elective Average: " + (electiveAvg == -1 ? "N/A" : String.format("%.2f", electiveAvg)));
-            System.out.println("Overall Average: " + String.format("%.2f", student.getAverageGrade()));
-            System.out.println("GPA: " + String.format("%.2f", student.computeGPA()));
-        } catch (Exception e) {
-            System.out.println("Error calculating averages: " + e.getMessage());
-        }
-
-        System.out.println("============================================\n");
     }
-
-
-
-}
 
 
 

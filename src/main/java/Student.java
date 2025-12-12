@@ -1,4 +1,4 @@
-public class Student {
+public abstract class Student implements IStudentInfo, IStudentAcademic, IStudentEligibility {
     protected int id;
     protected String name;
     protected int age;
@@ -16,52 +16,28 @@ public class Student {
         this.averageGrade = 0;
     }
 
-    public String getType() {
-        return "Student";
-    }
+    // IStudentInfo
+    public int getId() { return id; }
+    public String getName() { return name; }
+    public int getAge() { return age; }
+    public String getEmail() { return email; }
+    public String getPhone() { return phone; }
 
-    public int getPassingGrade() {
-        return 0;
-    }
-
-
-    public double getAverageGrade() {
-        return averageGrade;
-    }
-
-    public void setAverageGrade(double grade) {
-        this.averageGrade = grade;
-    }
-
-    public int getEnrolledSubjects() {
-        return Menu.gradeManager.getSubjectCountForStudent(this.id);
-    }
-
-
-    public String getComputedType() {
-        return null;
-    }
-
-    public String getStatus() {
-        return null;
-    }
-
-    //Student GPA Calculation
+    // IStudentAcademic
+    public double getAverageGrade() { return averageGrade; }
+    public void setAverageGrade(double grade) { this.averageGrade = grade; }
+    public int getEnrolledSubjects() { return Menu.gradeManager.getSubjectCountForStudent(this.id); }
     public double computeGPA() {
         int subjectCount = getEnrolledSubjects();
-        if (subjectCount == 0) {
-            return 0.0;
-        }
+        if (subjectCount == 0) return 0.0;
 
         double totalGPA = 0.0;
-
         for (int grade : Menu.gradeManager.getGradesForStudent(this.id)) {
             totalGPA += gradeToGPA(grade);
         }
-
         return totalGPA / subjectCount;
     }
-
+    public void updateAverageGPA() { this.averageGrade = computeGPA(); }
     double gradeToGPA(int grade) {
         if (grade >= 80) return 4.0;
         if (grade >= 70) return 3.0;
@@ -70,18 +46,10 @@ public class Student {
         return 0.0;
     }
 
-    // Store GPA in averageGrade
-    public void updateAverageGPA() {
-        this.averageGrade = computeGPA();
-    }
+    // IStudentEligibility
+    public abstract String getType();
+    public abstract int getPassingGrade();
+    public boolean isEligibleForHonors() { return getAverageGrade() >= getPassingGrade(); }
 
-
+    public abstract String getStatus();
 }
-
-
-
-
-
-
-
-

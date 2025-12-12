@@ -311,7 +311,7 @@ class SearchStudentTest {
 
         for (Student s : Menu.students) {
             double avgGrade = s.getAverageGrade();
-            if (avgGrade >= minGrade && avgGrade <= maxGrade && avgGrade > 0) {
+            if (avgGrade >= minGrade && avgGrade <= maxGrade) {
                 results.add(s);
             }
         }
