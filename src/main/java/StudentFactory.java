@@ -8,6 +8,7 @@ public class StudentFactory {
         return switch (type) {
             case 1 -> new RegularStudent(id, name, age, email, phone);
             case 2 -> new HonorsStudent(id, name, age, email, phone);
+
             default -> throw new InvalidStudentDataException("Invalid student type choice: " + type);
         };
     }

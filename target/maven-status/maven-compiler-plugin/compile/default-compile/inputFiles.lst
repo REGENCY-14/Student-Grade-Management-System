@@ -10,8 +10,14 @@ C:\Users\ZakariaOsman\IdeaProjects\StudentGradeManagementSystem\src\main\java\ex
 C:\Users\ZakariaOsman\IdeaProjects\StudentGradeManagementSystem\src\main\java\Grade.java
 C:\Users\ZakariaOsman\IdeaProjects\StudentGradeManagementSystem\src\main\java\GradeManager.java
 C:\Users\ZakariaOsman\IdeaProjects\StudentGradeManagementSystem\src\main\java\HonorsStudent.java
+C:\Users\ZakariaOsman\IdeaProjects\StudentGradeManagementSystem\src\main\java\IGradeManager.java
+C:\Users\ZakariaOsman\IdeaProjects\StudentGradeManagementSystem\src\main\java\IStudentAcademic.java
+C:\Users\ZakariaOsman\IdeaProjects\StudentGradeManagementSystem\src\main\java\IStudentEligibility.java
+C:\Users\ZakariaOsman\IdeaProjects\StudentGradeManagementSystem\src\main\java\IStudentInfo.java
 C:\Users\ZakariaOsman\IdeaProjects\StudentGradeManagementSystem\src\main\java\Main.java
 C:\Users\ZakariaOsman\IdeaProjects\StudentGradeManagementSystem\src\main\java\Menu.java
 C:\Users\ZakariaOsman\IdeaProjects\StudentGradeManagementSystem\src\main\java\RegularStudent.java
 C:\Users\ZakariaOsman\IdeaProjects\StudentGradeManagementSystem\src\main\java\Student.java
+C:\Users\ZakariaOsman\IdeaProjects\StudentGradeManagementSystem\src\main\java\StudentFactory.java
+C:\Users\ZakariaOsman\IdeaProjects\StudentGradeManagementSystem\src\main\java\StudentService.java
 C:\Users\ZakariaOsman\IdeaProjects\StudentGradeManagementSystem\src\main\java\Subject.java

@@ -6,11 +6,13 @@ import java.util.Scanner;
 
 public class Menu {
 
+
     static Scanner scanner = new Scanner(System.in);
     static ArrayList<Student> students = new ArrayList<>();
     static int studentIdCounter = 1000;
     static ArrayList<Grade> grades = new ArrayList<>();
     static GradeManager gradeManager = new GradeManager();
+    static StudentService studentService = new StudentService(students, 1000);
 
 
     public static void main(String[] args) throws StudentNotFoundException, GradeStorageFullException, InvalidGradeException, SubjectNotFoundException, InvalidStudentDataException, FileImportException, InvalidReportFormatException {
@@ -59,18 +61,27 @@ public class Menu {
         System.out.println("||    STUDENT GRADE MANAGEMENT SYSTEM     ||");
         System.out.println("============================================");
 
+        System.out.println("\n--- STUDENT MANAGEMENT ---");
         System.out.println("1. Add Student");
         System.out.println("2. View Students");
         System.out.println("3. Record Grade");
-        System.out.println("4. View Grade Report");
+
+        System.out.println("\n--- FILE OPERATIONS ---");
         System.out.println("5. Export Grade Report");
-        System.out.println("6. Calculate Student GPA");
         System.out.println("7. Bulk Import Grades");
+
+        System.out.println("\n--- ANALYTICS AND REPORTING ---");
+        System.out.println("4. View Grade Report");
+        System.out.println("6. Calculate Student GPA");
         System.out.println("8. View Student Statistics");
+
+        System.out.println("\n--- SEARCH AND QUERY ---");
         System.out.println("9. Search Students");
+
+        System.out.println("\n--- SYSTEM ---");
         System.out.println("10. Exit");
 
-        System.out.print("Enter choice: ");
+        System.out.print("\nEnter choice: ");
     }
 
 

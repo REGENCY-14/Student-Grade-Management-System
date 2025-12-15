@@ -26,25 +26,115 @@ public class GradeManager implements IGradeManager {
 
     @Override
     public void viewGradeByStudent(int studentId) throws StudentNotFoundException {
-        // Existing implementation...
+        // 1️⃣ Check if student exists first
+        Student s = findStudentById(studentId);
+        if (s == null) {
+            throw new StudentNotFoundException("Student with ID " + studentId + " does not exist.");
+        }
+        ArrayList<Grade> studentGrades = new ArrayList<>();
+
+        // Collect grades
+        for (int i = 0; i < gradeCount; i++) {
+            if (grades[i].getStudentId() == studentId) {
+                studentGrades.add(grades[i]);
+            }
+        }
+
+        if (studentGrades.isEmpty()) {
+            System.out.println("No grades recorded for this student.");
+            return;
+        }
+
+        studentGrades.sort(Comparator.comparing(Grade::getDate).reversed());
+
+        System.out.println("\n--------- GRADE REPORT FOR STUDENT " + studentId + " ---------");
+        System.out.printf("%-8s %-12s %-20s %-10s %-8s\n",
+                "GradeID", "Date", "Subject", "Type", "Grade");
+        System.out.println("-------------------------------------------------------------");
+
+        for (Grade g : studentGrades) {
+            Student student = findStudentById(g.getStudentId());
+            String status = (student != null) ? student.getStatus() : "N/A";
+
+            System.out.printf("%-8d %-12s %-20s %-10s %-8.2f %-8s\n",
+                    g.getGradeId(),
+                    g.getDate(),
+                    g.getSubject().getSubjectName(),
+                    g.getSubject().getSubjectType(),
+                    g.getGrade(),
+                    status
+            );
+        }
+
+        System.out.println("-------------------------------------------------------------");
+
+        double coreAvg = calculateCoreAverage(studentId);
+        double electAvg = calculateElectiveAverage(studentId);
+        double overallAvg = calculateOverallAverage(studentId);
+
+        System.out.println("Core Subjects Average: " +
+                (coreAvg == -1 ? "N/A" : String.format("%.2f", coreAvg)));
+
+        System.out.println("Elective Subjects Average: " +
+                (electAvg == -1 ? "N/A" : String.format("%.2f", electAvg)));
+
+        System.out.println("Current Average: " +
+                (overallAvg == -1 ? "N/A" : String.format("%.2f", overallAvg)));
+
+        System.out.println("-------------------------------------------------------------\n");
     }
 
     @Override
     public double calculateCoreAverage(int studentId) {
-        // Existing implementation...
-        return 0;
+        double total = 0;
+        int count = 0;
+
+        for (int i = 0; i < gradeCount; i++) {
+            Grade g = grades[i];
+            if (g.getStudentId() == studentId &&
+                    g.getSubject().getSubjectType().equals("Core")) {
+                total += g.getGrade();
+                count++;
+            }
+        }
+
+        return count == 0 ? -1 : total / count;
     }
 
     @Override
     public double calculateElectiveAverage(int studentId) {
-        // Existing implementation...
-        return 0;
+        double total = 0;
+        int count = 0;
+
+        for (int i = 0; i < gradeCount; i++) {
+            Grade g = grades[i];
+            if (g.getStudentId() == studentId &&
+                    g.getSubject().getSubjectType().equals("Elective")) {
+                total += g.getGrade();
+                count++;
+            }
+        }
+
+        return count == 0 ? -1 : total / count;
     }
 
     @Override
     public double calculateOverallAverage(int studentId) throws StudentNotFoundException {
-        // Existing implementation...
-        return 0;
+        if (findStudentById(studentId) == null) {
+            throw new StudentNotFoundException("Student with ID " + studentId + " not found.");
+        }
+
+        double total = 0;
+        int count = 0;
+
+        for (int i = 0; i < gradeCount; i++) {
+            if (grades[i].getStudentId() == studentId) {
+                total += grades[i].getGrade();
+                count++;
+            }
+        }
+
+        return count == 0 ? -1 : total / count;
     }
 
     @Override
