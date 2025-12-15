@@ -1,8 +1,17 @@
-import exception.*;
-
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.Scanner;
+
+import exception.FileImportException;
+import exception.GradeStorageFullException;
+import exception.InvalidGradeException;
+import exception.InvalidReportFormatException;
+import exception.InvalidStudentDataException;
+import exception.StudentNotFoundException;
+import exception.SubjectNotFoundException;
 
 public class Menu {
 
@@ -78,7 +87,6 @@ public class Menu {
         System.out.println("\n--- SEARCH AND QUERY ---");
         System.out.println("9. Search Students");
 
-        System.out.println("\n--- SYSTEM ---");
         System.out.println("10. Exit");
 
         System.out.print("\nEnter choice: ");
@@ -747,50 +755,157 @@ public class Menu {
 
 
 // ==================== SEARCH STUDENTS (Option 9) ====================
-// ⭐ ADD ALL OF THESE METHODS HERE - AFTER bulkImportGrades() method
 
     public static void searchStudents() {
         System.out.println("============================================");
         System.out.println("||         SEARCH STUDENTS               ||");
         System.out.println("============================================");
-        System.out.println("Search By:");
+        System.out.println("\n--- BASIC SEARCH ---");
         System.out.println("1. Student ID");
         System.out.println("2. Name (Partial Match)");
         System.out.println("3. Grade Range");
         System.out.println("4. Student Type (Regular/Honors)");
-        System.out.println("5. Back to Main Menu");
+        
+        System.out.println("\n--- REGEX SEARCH ---");
+        System.out.println("5. Search by Email Domain Pattern");
+        System.out.println("6. Search by Student ID Pattern (Wildcard)");
+        System.out.println("7. Search by Name Pattern (Regex)");
+        System.out.println("8. Custom Regex Pattern Search");
+        
+        System.out.println("\n9. Back to Main Menu");
         System.out.print("Enter choice: ");
 
         int choice = scanner.nextInt();
         scanner.nextLine();
 
         ArrayList<Student> results = new ArrayList<>();
+        RegexSearchEngine regexEngine = new RegexSearchEngine();
 
         try {
             switch (choice) {
                 case 1:
                     results = searchByStudentId();
+                    displaySearchResults(results);
                     break;
                 case 2:
                     results = searchByName();
+                    displaySearchResults(results);
                     break;
                 case 3:
                     results = searchByGradeRange();
+                    displaySearchResults(results);
                     break;
                 case 4:
                     results = searchByStudentType();
+                    displaySearchResults(results);
                     break;
                 case 5:
+                    regexSearchByEmailDomain(regexEngine);
+                    break;
+                case 6:
+                    regexSearchByIdPattern(regexEngine);
+                    break;
+                case 7:
+                    regexSearchByNamePattern(regexEngine);
+                    break;
+                case 8:
+                    regexCustomPatternSearch(regexEngine);
+                    break;
+                case 9:
                     return;
                 default:
                     System.out.println("Invalid choice!");
                     return;
             }
 
-            displaySearchResults(results);
-
         } catch (Exception e) {
             System.out.println("Error during search: " + e.getMessage());
+        }
+    }
+
+    private static void regexSearchByEmailDomain(RegexSearchEngine engine) {
+        System.out.println("\n========== REGEX SEARCH: EMAIL DOMAIN ==========");
+        System.out.println("Examples: gmail\\.com, .*@.*\\.edu, yahoo.*");
+        System.out.print("Enter email domain pattern: ");
+        String pattern = scanner.nextLine().trim();
+
+        System.out.print("Case insensitive? (y/n): ");
+        boolean caseInsensitive = scanner.nextLine().trim().equalsIgnoreCase("y");
+
+        engine.searchByEmailDomain(pattern, caseInsensitive);
+        engine.displayResults();
+
+        if (engine.hasResults()) {
+            handleBulkOperations(engine);
+        }
+    }
+
+    private static void regexSearchByIdPattern(RegexSearchEngine engine) {
+        System.out.println("\n========== REGEX SEARCH: STUDENT ID PATTERN ==========");
+        System.out.println("Examples: 10.*, 1[0-2].*, ^101[0-5]$");
+        System.out.print("Enter student ID pattern: ");
+        String pattern = scanner.nextLine().trim();
+
+        System.out.print("Case insensitive? (y/n): ");
+        boolean caseInsensitive = scanner.nextLine().trim().equalsIgnoreCase("y");
+
+        engine.searchByIdPattern(pattern, caseInsensitive);
+        engine.displayResults();
+
+        if (engine.hasResults()) {
+            handleBulkOperations(engine);
+        }
+    }
+
+    private static void regexSearchByNamePattern(RegexSearchEngine engine) {
+        System.out.println("\n========== REGEX SEARCH: NAME PATTERN ==========");
+        System.out.println("Examples: ^A.*, .*Smith$, ^[A-M].*");
+        System.out.print("Enter name pattern: ");
+        String pattern = scanner.nextLine().trim();
+
+        System.out.print("Case insensitive? (y/n): ");
+        boolean caseInsensitive = scanner.nextLine().trim().equalsIgnoreCase("y");
+
+        engine.searchByNamePattern(pattern, caseInsensitive);
+        engine.displayResults();
+
+        if (engine.hasResults()) {
+            handleBulkOperations(engine);
+        }
+    }
+
+    private static void regexCustomPatternSearch(RegexSearchEngine engine) {
+        System.out.println("\n========== CUSTOM REGEX PATTERN SEARCH ==========");
+        System.out.println("Available fields: name, email, phone, type, status, id");
+        System.out.print("Enter field name: ");
+        String fieldName = scanner.nextLine().trim();
+
+        System.out.print("Enter regex pattern: ");
+        String pattern = scanner.nextLine().trim();
+
+        System.out.print("Case insensitive? (y/n): ");
+        boolean caseInsensitive = scanner.nextLine().trim().equalsIgnoreCase("y");
+
+        engine.searchByCustomPattern(pattern, fieldName, caseInsensitive);
+        engine.displayResults();
+
+        if (engine.hasResults()) {
+            handleBulkOperations(engine);
+        }
+    }
+
+    private static void handleBulkOperations(RegexSearchEngine engine) {
+        boolean bulkOperating = true;
+        while (bulkOperating) {
+            engine.displayBulkOperationsMenu();
+            int bulkChoice = scanner.nextInt();
+            scanner.nextLine();
+
+            engine.performBulkOperation(bulkChoice);
+
+            if (bulkChoice == 4) {
+                bulkOperating = false;
+            }
         }
     }
 
