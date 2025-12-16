@@ -4,6 +4,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 
 import exception.FileImportException;
@@ -50,13 +51,15 @@ public class Menu {
                 viewStudentGPAReport(studentId);
             }else if (choice == 7){
                 bulkImportGrades();
+            }else if (choice == 10){
+                concurrentBatchReportGeneration();
             }else if (choice == 8) {
                 viewClassStatistics();
             } else if (choice == 9){
                 searchStudents();
             } else if (choice == 11) {
                 launchStatisticsDashboard();
-            } else if (choice == 12) {
+            } else if (choice == 13) {
                 running = false;
                 System.out.println("Thank you for using grade management system!");
                 System.out.println("Goodbye");
@@ -81,6 +84,7 @@ public class Menu {
         System.out.println("\n--- FILE OPERATIONS ---");
         System.out.println("5. Export Grade Report");
         System.out.println("7. Bulk Import Grades");
+        System.out.println("10. Concurrent Batch Report Generation");
 
         System.out.println("\n--- ANALYTICS AND REPORTING ---");
         System.out.println("4. View Grade Report");
@@ -91,7 +95,7 @@ public class Menu {
         System.out.println("\n--- SEARCH AND QUERY ---");
         System.out.println("9. Search Students");
 
-        System.out.println("12. Exit");
+        System.out.println("13. Exit");
 
         System.out.print("\nEnter choice: ");
     }
@@ -1264,7 +1268,68 @@ public class Menu {
         
         System.out.println("\n✓ Dashboard closed. Returning to main menu...");
     }
+
+    /**
+     * Launch concurrent batch report generation
+     */
+    public static void concurrentBatchReportGeneration() {
+        if (students.isEmpty()) {
+            System.out.println("❌ No students to generate reports for.");
+            return;
+        }
+        
+        System.out.println("\n" + "═".repeat(70));
+        System.out.println("CONCURRENT BATCH REPORT GENERATION");
+        System.out.println("═".repeat(70));
+        System.out.println(String.format("Students to process: %d", students.size()));
+        
+        // Get processor count
+        int availableProcessors = Runtime.getRuntime().availableProcessors();
+        System.out.println(String.format("Available processors: %d", availableProcessors));
+        System.out.println(String.format("Recommended thread range: 2-%d", Math.min(8, availableProcessors * 2)));
+        
+        // Get user's thread count selection
+        System.out.print("\nEnter number of threads (2-8, default = " + 
+                Math.min(4, availableProcessors) + "): ");
+        
+        int threadCount = 0;
+        try {
+            if (scanner.hasNextInt()) {
+                threadCount = scanner.nextInt();
+                scanner.nextLine();
+                
+                if (threadCount < 2 || threadCount > 8) {
+                    System.out.println("⚠️  Invalid range. Using default: " + Math.min(4, availableProcessors));
+                    threadCount = Math.min(4, availableProcessors);
+                }
+            } else {
+                scanner.nextLine();
+                threadCount = Math.min(4, availableProcessors);
+            }
+        } catch (Exception e) {
+            threadCount = Math.min(4, availableProcessors);
+        }
+        
+        try {
+            // Create and run concurrent report generator
+            ConcurrentReportGenerator generator = new ConcurrentReportGenerator(
+                    gradeManager, students, threadCount);
+            
+            Map<String, ConcurrentReportGenerator.ReportStats> results = 
+                    generator.generateReportsParallel();
+            
+            // Display summary
+            System.out.println("✓ Batch report generation completed successfully!");
+            System.out.println("Press Enter to return to main menu...");
+            scanner.nextLine();
+            
+        } catch (Exception e) {
+            System.out.println("❌ Error during concurrent report generation: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
 }
+
 
 
 
