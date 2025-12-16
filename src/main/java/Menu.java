@@ -54,7 +54,9 @@ public class Menu {
                 viewClassStatistics();
             } else if (choice == 9){
                 searchStudents();
-            }else if (choice == 10) {
+            } else if (choice == 11) {
+                launchStatisticsDashboard();
+            } else if (choice == 12) {
                 running = false;
                 System.out.println("Thank you for using grade management system!");
                 System.out.println("Goodbye");
@@ -84,11 +86,12 @@ public class Menu {
         System.out.println("4. View Grade Report");
         System.out.println("6. Calculate Student GPA");
         System.out.println("8. View Student Statistics");
+        System.out.println("11. Real-Time Statistics Dashboard");
 
         System.out.println("\n--- SEARCH AND QUERY ---");
         System.out.println("9. Search Students");
 
-        System.out.println("10. Exit");
+        System.out.println("12. Exit");
 
         System.out.print("\nEnter choice: ");
     }
@@ -1241,12 +1244,27 @@ public class Menu {
         formatManager.listFilesByFormat(format);
     }
 
-
-
-
-
-
+    /**
+     * Launch the real-time statistics dashboard
+     */
+    public static void launchStatisticsDashboard() {
+        System.out.println("\n" + "=".repeat(70));
+        System.out.println("REAL-TIME STATISTICS DASHBOARD");
+        System.out.println("=".repeat(70));
+        System.out.println("Initializing dashboard...");
+        System.out.println("Spawning background calculation thread...\n");
+        
+        try {
+            StatisticsDashboard dashboard = new StatisticsDashboard(gradeManager, students, scanner);
+            dashboard.launch();
+        } catch (Exception e) {
+            System.out.println("Error launching dashboard: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        System.out.println("\n✓ Dashboard closed. Returning to main menu...");
     }
+}
 
 
 
