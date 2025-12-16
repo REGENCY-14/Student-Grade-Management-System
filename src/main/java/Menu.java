@@ -24,11 +24,20 @@ public class Menu {
     static ArrayList<Grade> grades = new ArrayList<>();
     static GradeManager gradeManager = new GradeManager();
     static StudentService studentService = new StudentService(students, 1000);
-
+    static TaskScheduler taskScheduler;
 
     public static void main(String[] args) throws StudentNotFoundException, GradeStorageFullException, InvalidGradeException, SubjectNotFoundException, InvalidStudentDataException, FileImportException, InvalidReportFormatException {
-
-        boolean running = true;
+        
+        // Initialize task scheduler
+        taskScheduler = new TaskScheduler(gradeManager, students);
+        taskScheduler.createDefaultTasks();
+        
+        // Add shutdown hook for graceful scheduler shutdown
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            if (taskScheduler != null) {
+                taskScheduler.shutdown();
+            }
+        }));        boolean running = true;
 
         while (running) {
             mainMenu();
@@ -59,7 +68,9 @@ public class Menu {
                 searchStudents();
             } else if (choice == 11) {
                 launchStatisticsDashboard();
-            } else if (choice == 13) {
+            } else if (choice == 12) {
+                openScheduledTasksMenu();
+            } else if (choice == 14) {
                 running = false;
                 System.out.println("Thank you for using grade management system!");
                 System.out.println("Goodbye");
@@ -75,7 +86,6 @@ public class Menu {
         System.out.println("============================================");
         System.out.println("||    STUDENT GRADE MANAGEMENT SYSTEM     ||");
         System.out.println("============================================");
-
         System.out.println("\n--- STUDENT MANAGEMENT ---");
         System.out.println("1. Add Student");
         System.out.println("2. View Students");
@@ -95,7 +105,10 @@ public class Menu {
         System.out.println("\n--- SEARCH AND QUERY ---");
         System.out.println("9. Search Students");
 
-        System.out.println("13. Exit");
+        System.out.println("\n--- ADVANCED FEATURES ---");
+        System.out.println("12. Scheduled Automated Tasks");
+
+        System.out.println("14. Exit");
 
         System.out.print("\nEnter choice: ");
     }
@@ -1326,6 +1339,227 @@ public class Menu {
         } catch (Exception e) {
             System.out.println("❌ Error during concurrent report generation: " + e.getMessage());
             e.printStackTrace();
+        }
+    }
+
+    /**
+     * Open scheduled tasks management menu
+     */
+    public static void openScheduledTasksMenu() {
+        boolean running = true;
+        
+        while (running) {
+            System.out.println("\n" + "═".repeat(70));
+            System.out.println("⏰ SCHEDULED AUTOMATED TASKS");
+            System.out.println("═".repeat(70));
+            
+            List<ScheduledTask> tasks = taskScheduler.getActiveTasks();
+            
+            if (tasks.isEmpty()) {
+                System.out.println("No scheduled tasks configured.");
+            } else {
+                System.out.println("\nActive Tasks:");
+                for (int i = 0; i < tasks.size(); i++) {
+                    ScheduledTask task = tasks.get(i);
+                    System.out.printf("\n[%d] %s\n", i + 1, task.description);
+                    System.out.println("    Status: " + (task.enabled ? "✓ Enabled" : "✗ Disabled"));
+                    System.out.println("    " + taskScheduler.getTaskStatus(task));
+                }
+            }
+            
+            System.out.println("\n" + "─".repeat(70));
+            System.out.println("1. View Task Details");
+            System.out.println("2. Enable/Disable Task");
+            System.out.println("3. View Task Execution Logs");
+            System.out.println("4. Run Task Manually");
+            System.out.println("5. Add Custom Task (Simulated)");
+            System.out.println("6. Back to Main Menu");
+            System.out.print("Enter choice: ");
+            
+            if (!scanner.hasNextInt()) {
+                scanner.nextLine();
+                continue;
+            }
+            
+            int choice = scanner.nextInt();
+            scanner.nextLine();
+            
+            switch (choice) {
+                case 1:
+                    viewTaskDetails(tasks);
+                    break;
+                case 2:
+                    toggleTaskStatus(tasks);
+                    break;
+                case 3:
+                    viewTaskLogs(tasks);
+                    break;
+                case 4:
+                    runTaskManually(tasks);
+                    break;
+                case 5:
+                    System.out.println("Custom task scheduling feature (demonstration)");
+                    System.out.println("In production, this would allow creating custom tasks with specific schedules.");
+                    System.out.println("Press Enter to continue...");
+                    scanner.nextLine();
+                    break;
+                case 6:
+                    running = false;
+                    break;
+                default:
+                    System.out.println("Invalid choice.");
+            }
+        }
+    }
+    
+    /**
+     * View details of a scheduled task
+     */
+    private static void viewTaskDetails(List<ScheduledTask> tasks) {
+        if (tasks.isEmpty()) {
+            System.out.println("No tasks available.");
+            return;
+        }
+        
+        System.out.println("\nSelect task to view details:");
+        for (int i = 0; i < tasks.size(); i++) {
+            System.out.printf("[%d] %s\n", i + 1, tasks.get(i).description);
+        }
+        System.out.print("Enter selection: ");
+        
+        if (!scanner.hasNextInt()) {
+            scanner.nextLine();
+            return;
+        }
+        
+        int choice = scanner.nextInt() - 1;
+        scanner.nextLine();
+        
+        if (choice >= 0 && choice < tasks.size()) {
+            ScheduledTask task = tasks.get(choice);
+            System.out.println("\n" + "═".repeat(70));
+            System.out.println("TASK DETAILS: " + task.description);
+            System.out.println("═".repeat(70));
+            System.out.println("Task ID: " + task.taskId);
+            System.out.println("Type: " + task.taskType.displayName);
+            System.out.println("Schedule: " + task.scheduleType.displayName);
+            System.out.println("Status: " + (task.enabled ? "Enabled" : "Disabled"));
+            System.out.println("Created: " + task.createdAt);
+            System.out.println("Total Executions: " + task.totalExecutions);
+            System.out.println("Failures: " + task.failureCount);
+            if (task.lastExecutionTime != null) {
+                System.out.println("Last Execution: " + task.lastExecutionTime);
+                System.out.println("Last Duration: " + task.lastExecutionDurationMs + "ms");
+            }
+            System.out.println("\n" + taskScheduler.getTaskStatus(task));
+            System.out.println("\nPress Enter to continue...");
+            scanner.nextLine();
+        }
+    }
+    
+    /**
+     * Toggle task enabled/disabled status
+     */
+    private static void toggleTaskStatus(List<ScheduledTask> tasks) {
+        if (tasks.isEmpty()) {
+            System.out.println("No tasks available.");
+            return;
+        }
+        
+        System.out.println("\nSelect task to toggle:");
+        for (int i = 0; i < tasks.size(); i++) {
+            ScheduledTask task = tasks.get(i);
+            System.out.printf("[%d] %s (%s)\n", i + 1, task.description, 
+                    task.enabled ? "Enabled" : "Disabled");
+        }
+        System.out.print("Enter selection: ");
+        
+        if (!scanner.hasNextInt()) {
+            scanner.nextLine();
+            return;
+        }
+        
+        int choice = scanner.nextInt() - 1;
+        scanner.nextLine();
+        
+        if (choice >= 0 && choice < tasks.size()) {
+            ScheduledTask task = tasks.get(choice);
+            if (task.enabled) {
+                taskScheduler.disableTask(task.taskId);
+            } else {
+                taskScheduler.enableTask(task.taskId);
+            }
+        }
+    }
+    
+    /**
+     * View task execution logs
+     */
+    private static void viewTaskLogs(List<ScheduledTask> tasks) {
+        if (tasks.isEmpty()) {
+            System.out.println("No tasks available.");
+            return;
+        }
+        
+        System.out.println("\nSelect task to view logs:");
+        for (int i = 0; i < tasks.size(); i++) {
+            System.out.printf("[%d] %s\n", i + 1, tasks.get(i).description);
+        }
+        System.out.print("Enter selection: ");
+        
+        if (!scanner.hasNextInt()) {
+            scanner.nextLine();
+            return;
+        }
+        
+        int choice = scanner.nextInt() - 1;
+        scanner.nextLine();
+        
+        if (choice >= 0 && choice < tasks.size()) {
+            ScheduledTask task = tasks.get(choice);
+            System.out.println("\nTask Execution Logs: " + task.description);
+            System.out.println("Total Executions: " + task.totalExecutions);
+            System.out.println("Successful: " + (task.totalExecutions - task.failureCount));
+            System.out.println("Failed: " + task.failureCount);
+            System.out.println("Success Rate: " + 
+                    String.format("%.1f%%", 100.0 * (task.totalExecutions - task.failureCount) / 
+                            Math.max(1, task.totalExecutions)));
+            System.out.println("\nLogs file: ./task_logs/" + task.taskId + ".log");
+            System.out.println("\nPress Enter to continue...");
+            scanner.nextLine();
+        }
+    }
+    
+    /**
+     * Run a task manually
+     */
+    private static void runTaskManually(List<ScheduledTask> tasks) {
+        if (tasks.isEmpty()) {
+            System.out.println("No tasks available.");
+            return;
+        }
+        
+        System.out.println("\nSelect task to run manually:");
+        for (int i = 0; i < tasks.size(); i++) {
+            System.out.printf("[%d] %s\n", i + 1, tasks.get(i).description);
+        }
+        System.out.print("Enter selection: ");
+        
+        if (!scanner.hasNextInt()) {
+            scanner.nextLine();
+            return;
+        }
+        
+        int choice = scanner.nextInt() - 1;
+        scanner.nextLine();
+        
+        if (choice >= 0 && choice < tasks.size()) {
+            ScheduledTask task = tasks.get(choice);
+            System.out.println("\n▶ Running task: " + task.description);
+            System.out.println("(In actual implementation, this would execute the task immediately)");
+            System.out.println("Task execution would be logged with timestamp and duration.");
+            System.out.println("\nPress Enter to continue...");
+            scanner.nextLine();
         }
     }
 }
