@@ -94,6 +94,8 @@ public class Menu {
                 advancedPatternSearch();
             } else if (choice == 14) {
                 openCacheMenu();
+            } else if (choice == 15) {
+                openAuditMenu();
             } else if (choice == 16) {
                 running = false;
                 System.out.println("Thank you for using grade management system!");
@@ -133,6 +135,7 @@ public class Menu {
         System.out.println("12. Scheduled Automated Tasks");
         System.out.println("13. Advanced Pattern Based Search");
         System.out.println("14. Cache Management");
+        System.out.println("15. Audit Trail");
 
         System.out.println("16. Exit");
 
@@ -144,6 +147,7 @@ public class Menu {
         boolean valid = false;
         while (!valid) {
             try {
+                long start = System.currentTimeMillis();
                 System.out.println("-------------- ADD STUDENT ----------------");
 
                 System.out.print("Enter student name: ");
@@ -186,6 +190,8 @@ public class Menu {
                     // ignore cache errors
                 }
                 System.out.println(newStudent.getType() + " student added!");
+                long exec = System.currentTimeMillis() - start;
+                try { AuditLogger.getInstance().log("ADD_STUDENT", "id=" + newStudent.getId() + ",name=" + newStudent.getName(), exec, true, ""); } catch (Exception ex) { }
 
 
                 System.out.println("--------------------------------------------");
@@ -194,10 +200,12 @@ public class Menu {
             } catch (InvalidStudentDataException e) {
                 System.out.println("Error: " + e.getMessage());
                 System.out.println("Please try again.\n");
+                try { AuditLogger.getInstance().log("ADD_STUDENT", "input_validation", 0, false, e.getMessage()); } catch (Exception ex) { }
             } catch (Exception e) {
                 System.out.println("Unexpected error: " + e.getMessage());
                 System.out.println("Please try again.\n");
                 scanner.nextLine(); // consume invalid input
+                try { AuditLogger.getInstance().log("ADD_STUDENT", "exception", 0, false, e.getMessage()); } catch (Exception ex) { }
             }
         }
     }
@@ -341,12 +349,20 @@ public class Menu {
 
 
     // VIEW GRADE REPORT
-    public static void viewGradeReport() throws StudentNotFoundException {
+    public static void viewGradeReport() {
         System.out.print("Enter student ID: ");
         int id = scanner.nextInt();
         scanner.nextLine();
-
-        gradeManager.viewGradeByStudent(id);
+        long start = System.currentTimeMillis();
+        try {
+            gradeManager.viewGradeByStudent(id);
+            long exec = System.currentTimeMillis() - start;
+            try { AuditLogger.getInstance().log("VIEW_GRADE_REPORT", "studentId=" + id, exec, true, ""); } catch (Exception ex) { }
+        } catch (StudentNotFoundException e) {
+            long exec = System.currentTimeMillis() - start;
+            try { AuditLogger.getInstance().log("VIEW_GRADE_REPORT", "studentId=" + id, exec, false, e.getMessage()); } catch (Exception ex) { }
+            System.out.println("Student not found!");
+        }
     }
 
     // CALCULATE STUDENT GPA
@@ -687,6 +703,7 @@ public class Menu {
         boolean valid = false;
         while (!valid) {
             try {
+                long start = System.currentTimeMillis();
                 System.out.println("------------- BULK IMPORT GRADES ----------------");
 
                 System.out.print("Enter file name (without extension): ");
@@ -796,6 +813,8 @@ public class Menu {
 
                 System.out.println("------------------------------------------------");
                 System.out.println("Import completed!");
+                long exec = System.currentTimeMillis() - start;
+                try { AuditLogger.getInstance().log("BULK_IMPORT", "file=" + filePath + ",total=" + totalRows + ",success=" + successCount + ",failed=" + failedCount, exec, true, ""); } catch (Exception ex) { }
                 valid = true; // exit loop if successful
 
             } catch (Exception e) {
@@ -1813,6 +1832,7 @@ public class Menu {
     }
 
     private static void openCacheMenu() {
+        // Audit menu placed above cache menu in source; openAuditMenu is defined below
         CacheManager cache = CacheManager.getInstance();
         boolean inCacheMenu = true;
         while (inCacheMenu) {
@@ -1849,6 +1869,78 @@ public class Menu {
                     case 5:
                         inCacheMenu = false;
                         break;
+                    default:
+                        System.out.println("Invalid option.");
+                }
+            } catch (Exception e) {
+                System.out.println("Error: " + e.getMessage());
+                scanner.nextLine();
+            }
+        }
+    }
+
+    private static void openAuditMenu() {
+        AuditLogger logger = AuditLogger.getInstance();
+        boolean inAudit = true;
+        while (inAudit) {
+            System.out.println("\n" + "=".repeat(50));
+            System.out.println("AUDIT TRAIL");
+            System.out.println("=".repeat(50));
+            System.out.println("1. View Recent Entries");
+            System.out.println("2. Search Entries (date range / operation / thread)");
+            System.out.println("3. Audit Statistics (date range)");
+            System.out.println("4. Back to Main Menu");
+            System.out.print("Select option: ");
+            try {
+                int choice = scanner.nextInt();
+                scanner.nextLine();
+                switch (choice) {
+                    case 1: {
+                        System.out.print("How many recent entries to show? ");
+                        int n = scanner.nextInt(); scanner.nextLine();
+                        var entries = logger.readRecentEntries(n);
+                        for (var e : entries) {
+                            System.out.printf("%s | TID:%d | %s | %s | %dms | %s | %s\n",
+                                    e.timestamp.toString(), e.threadId, e.operationType, e.userAction, e.executionTimeMs, e.success ? "OK" : "FAIL", e.message);
+                        }
+                        break;
+                    }
+                    case 2: {
+                        System.out.print("Start date (yyyy-MM-dd) or blank: ");
+                        String sFrom = scanner.nextLine().trim();
+                        System.out.print("End date (yyyy-MM-dd) or blank: ");
+                        String sTo = scanner.nextLine().trim();
+                        System.out.print("Operation type (or blank): ");
+                        String op = scanner.nextLine().trim();
+                        System.out.print("Thread ID (or blank): ");
+                        String tid = scanner.nextLine().trim();
+                        java.time.Instant from = null, to = null; Long threadId = null;
+                        try { if (!sFrom.isEmpty()) from = java.time.LocalDate.parse(sFrom).atStartOfDay(java.time.ZoneId.systemDefault()).toInstant(); } catch (Exception ex) { }
+                        try { if (!sTo.isEmpty()) to = java.time.LocalDate.parse(sTo).plusDays(1).atStartOfDay(java.time.ZoneId.systemDefault()).toInstant(); } catch (Exception ex) { }
+                        try { if (!tid.isEmpty()) threadId = Long.parseLong(tid); } catch (Exception ex) { }
+                        var results = logger.searchEntries(from, to, op.isEmpty() ? null : op, threadId);
+                        for (var e : results) {
+                            System.out.printf("%s | TID:%d | %s | %s | %dms | %s | %s\n",
+                                    e.timestamp.toString(), e.threadId, e.operationType, e.userAction, e.executionTimeMs, e.success ? "OK" : "FAIL", e.message);
+                        }
+                        break;
+                    }
+                    case 3: {
+                        System.out.print("Start date (yyyy-MM-dd) or blank: ");
+                        String sFrom = scanner.nextLine().trim();
+                        System.out.print("End date (yyyy-MM-dd) or blank: ");
+                        String sTo = scanner.nextLine().trim();
+                        java.time.Instant from = null, to = null;
+                        try { if (!sFrom.isEmpty()) from = java.time.LocalDate.parse(sFrom).atStartOfDay(java.time.ZoneId.systemDefault()).toInstant(); } catch (Exception ex) { }
+                        try { if (!sTo.isEmpty()) to = java.time.LocalDate.parse(sTo).plusDays(1).atStartOfDay(java.time.ZoneId.systemDefault()).toInstant(); } catch (Exception ex) { }
+                        var st = logger.computeStats(from, to);
+                        System.out.println("Operations per hour:");
+                        st.opsPerHour.forEach((hour, c) -> System.out.println(java.time.Instant.ofEpochSecond(hour).atZone(java.time.ZoneId.systemDefault()).toLocalDateTime() + " -> " + c));
+                        System.out.println("Average execution time (ms): " + String.format("%.2f", st.avgExecTime));
+                        break;
+                    }
+                    case 4:
+                        inAudit = false; break;
                     default:
                         System.out.println("Invalid option.");
                 }

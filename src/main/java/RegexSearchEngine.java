@@ -88,6 +88,7 @@ public class RegexSearchEngine {
         }
         
         stats.searchTimeMs = System.currentTimeMillis() - startTime;
+        try { AuditLogger.getInstance().log("SEARCH_EMAIL_DOMAIN", "pattern=" + domainPattern, stats.searchTimeMs, true, "matches=" + stats.matchesFound); } catch (Exception ex) { }
         return currentResults.stream().map(r -> r.student).collect(Collectors.toList());
     }
 
@@ -131,6 +132,7 @@ public class RegexSearchEngine {
         }
         
         stats.searchTimeMs = System.currentTimeMillis() - startTime;
+        try { AuditLogger.getInstance().log("SEARCH_ID_PATTERN", "pattern=" + idPattern, stats.searchTimeMs, true, "matches=" + stats.matchesFound); } catch (Exception ex) { }
         return currentResults.stream().map(r -> r.student).collect(Collectors.toList());
     }
 
@@ -173,6 +175,7 @@ public class RegexSearchEngine {
         }
         
         stats.searchTimeMs = System.currentTimeMillis() - startTime;
+        try { AuditLogger.getInstance().log("SEARCH_NAME_PATTERN", "pattern=" + namePattern, stats.searchTimeMs, true, "matches=" + stats.matchesFound); } catch (Exception ex) { }
         return currentResults.stream().map(r -> r.student).collect(Collectors.toList());
     }
 
@@ -219,6 +222,7 @@ public class RegexSearchEngine {
         }
         
         stats.searchTimeMs = System.currentTimeMillis() - startTime;
+        try { AuditLogger.getInstance().log("SEARCH_CUSTOM", "field=" + fieldName + ",pattern=" + pattern, stats.searchTimeMs, true, "matches=" + stats.matchesFound); } catch (Exception ex) { }
         return currentResults.stream().map(r -> r.student).collect(Collectors.toList());
     }
 

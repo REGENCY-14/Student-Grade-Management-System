@@ -76,6 +76,17 @@ public class ConcurrentReportGenerator {
             long startTime = System.currentTimeMillis();
             
             try {
+                // audit: report generation start
+                try {
+                    AuditLogger.getInstance().log(
+                            "REPORT_GENERATION_START",
+                            "studentId=" + student.getId(),
+                            -1,
+                            true,
+                            ""
+                    );
+                } catch (Exception ex) { }
+
                 // Generate report content
                 StringBuilder reportContent = generateReportContent(student);
                 
@@ -101,6 +112,17 @@ public class ConcurrentReportGenerator {
                     stats.averageGrade = ConcurrentReportGenerator.this.calculateStudentAverage(student.getId());
                 }
 
+                // audit: report generation success
+                try {
+                    AuditLogger.getInstance().log(
+                            "REPORT_GENERATION_END",
+                            "studentId=" + student.getId() + ",file=" + filePath,
+                            stats.generationTimeMs,
+                            true,
+                            ""
+                    );
+                } catch (Exception ex) { }
+
                 // Update progress
                 progressTracker.reportCompleted(student.getName(), stats.generationTimeMs);
                 
@@ -108,6 +130,18 @@ public class ConcurrentReportGenerator {
                 stats.success = false;
                 stats.errorMessage = e.getMessage();
                 stats.generationTimeMs = System.currentTimeMillis() - startTime;
+
+                // audit: report generation failure
+                try {
+                    AuditLogger.getInstance().log(
+                            "REPORT_GENERATION_END",
+                            "studentId=" + student.getId(),
+                            stats.generationTimeMs,
+                            false,
+                            e.getMessage()
+                    );
+                } catch (Exception ex) { }
+
                 progressTracker.reportFailed(student.getName(), e);
             } finally {
                 completionLatch.countDown();
@@ -285,7 +319,7 @@ public class ConcurrentReportGenerator {
                 reportTasks.add(task);
                 executorService.submit(task);
             }
-            
+
             // Wait for completion with progress display
             displayProgressLive(completionLatch, students.size());
             

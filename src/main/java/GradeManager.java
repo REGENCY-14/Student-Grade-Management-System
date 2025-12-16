@@ -16,17 +16,28 @@ public class GradeManager implements IGradeManager {
             throw new StudentNotFoundException("Student with ID " + grade.getStudentId() + " not found.");
         }
 
+        long start = System.currentTimeMillis();
         if (gradeCount < grades.length) {
-            grades[gradeCount++] = grade;
-            updateStudentAverage(grade.getStudentId());
-            // invalidate cache entries related to this student
             try {
-                CacheManager.getInstance().invalidate("student:" + grade.getStudentId());
-                CacheManager.getInstance().invalidate("report:" + grade.getStudentId());
-            } catch (Exception ex) {
-                // ignore cache errors
+                grades[gradeCount++] = grade;
+                updateStudentAverage(grade.getStudentId());
+                // invalidate cache entries related to this student
+                try {
+                    CacheManager.getInstance().invalidate("student:" + grade.getStudentId());
+                    CacheManager.getInstance().invalidate("report:" + grade.getStudentId());
+                } catch (Exception ex) {
+                    // ignore cache errors
+                }
+                long exec = System.currentTimeMillis() - start;
+                try { AuditLogger.getInstance().log("ADD_GRADE", "studentId=" + grade.getStudentId() + ",subject=" + grade.getSubject().getSubjectName(), exec, true, ""); } catch (Exception ex) { }
+            } catch (RuntimeException rex) {
+                long exec = System.currentTimeMillis() - start;
+                try { AuditLogger.getInstance().log("ADD_GRADE", "studentId=" + grade.getStudentId(), exec, false, rex.getMessage()); } catch (Exception ex) { }
+                throw rex;
             }
         } else {
+            long exec = System.currentTimeMillis() - start;
+            try { AuditLogger.getInstance().log("ADD_GRADE", "studentId=" + grade.getStudentId(), exec, false, "Storage full"); } catch (Exception ex) { }
             throw new GradeStorageFullException("Cannot add grade. Storage limit of " + grades.length + " reached.");
         }
     }
