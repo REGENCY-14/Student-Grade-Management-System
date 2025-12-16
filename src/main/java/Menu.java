@@ -2,10 +2,16 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import exception.FileImportException;
 import exception.GradeStorageFullException;
@@ -97,6 +103,8 @@ public class Menu {
             } else if (choice == 15) {
                 openAuditMenu();
             } else if (choice == 16) {
+                openStreamProcessingMenu();
+            } else if (choice == 17) {
                 running = false;
                 System.out.println("Thank you for using grade management system!");
                 System.out.println("Goodbye");
@@ -136,8 +144,9 @@ public class Menu {
         System.out.println("13. Advanced Pattern Based Search");
         System.out.println("14. Cache Management");
         System.out.println("15. Audit Trail");
+        System.out.println("16. Stream-Based Data Processing (Streams API Lab)");
 
-        System.out.println("16. Exit");
+        System.out.println("17. Exit");
 
         System.out.print("\nEnter choice: ");
     }
@@ -1949,6 +1958,278 @@ public class Menu {
                 scanner.nextLine();
             }
         }
+    }
+
+    /**
+     * Stream API based data processing lab/demo.
+     * Demonstrates filtering, mapping, reducing, grouping, partitioning,
+     * sequential vs parallel streams and Files.lines() processing.
+     */
+    private static void openStreamProcessingMenu() {
+        boolean inStreams = true;
+        while (inStreams) {
+            System.out.println("\n" + "=".repeat(70));
+            System.out.println("STREAM-BASED DATA PROCESSING (Java Streams API)");
+            System.out.println("=".repeat(70));
+            System.out.println("1. Find all honors students with GPA > 3.5");
+            System.out.println("2. Group students by GPA range");
+            System.out.println("3. Calculate average grade per subject");
+            System.out.println("4. Extract unique course codes");
+            System.out.println("5. Find top 5 students by average grade");
+            System.out.println("6. Partition students by honors eligibility");
+            System.out.println("7. Process large CSV file with Files.lines()");
+            System.out.println("8. Compare sequential vs parallel stream performance");
+            System.out.println("9. Back to Main Menu");
+            System.out.print("Select option: ");
+
+            try {
+                int choice = scanner.nextInt();
+                scanner.nextLine();
+                switch (choice) {
+                    case 1 -> streamHonorsStudents();
+                    case 2 -> streamGroupStudentsByGpaRange();
+                    case 3 -> streamAverageGradePerSubject();
+                    case 4 -> streamUniqueCourseCodes();
+                    case 5 -> streamTop5ByAverageGrade();
+                    case 6 -> streamPartitionHonorsEligibility();
+                    case 7 -> streamProcessLargeCsv();
+                    case 8 -> streamSequentialVsParallelComparison();
+                    case 9 -> inStreams = false;
+                    default -> System.out.println("Invalid option.");
+                }
+            } catch (Exception e) {
+                System.out.println("Error: " + e.getMessage());
+                scanner.nextLine();
+            }
+        }
+    }
+
+    // ---------- Stream helpers ----------
+
+    // 1. Find all honors students with GPA > 3.5 using filter, map, sorted, collect,
+    //    plus examples of findFirst, findAny, anyMatch, noneMatch
+    private static void streamHonorsStudents() {
+        if (students.isEmpty()) {
+            System.out.println("No students in system.");
+            return;
+        }
+
+        long start = System.nanoTime();
+        List<Student> honors = students.stream()
+                .filter(s -> s instanceof HonorsStudent)
+                .filter(s -> s.computeGPA() > 3.5)
+                .sorted((a, b) -> Double.compare(b.computeGPA(), a.computeGPA()))
+                .collect(Collectors.toList());
+        long durationMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
+
+        System.out.println("\nHonors students with GPA > 3.5 (sequential stream):");
+        honors.forEach(s -> System.out.printf("ID: %d | Name: %s | GPA: %.2f%n",
+                s.getId(), s.getName(), s.computeGPA()));
+        System.out.println("Execution time: " + durationMs + " ms");
+
+        // Demonstrate findFirst / findAny / anyMatch / noneMatch
+        students.stream()
+                .filter(s -> s instanceof HonorsStudent)
+                .filter(s -> s.computeGPA() > 3.5)
+                .findFirst()
+                .ifPresentOrElse(
+                        s -> System.out.println("findFirst(): " + s.getName() + " (GPA " + String.format("%.2f", s.computeGPA()) + ")"),
+                        () -> System.out.println("findFirst(): no matching student")
+                );
+
+        students.parallelStream()
+                .filter(s -> s instanceof HonorsStudent)
+                .filter(s -> s.computeGPA() > 3.5)
+                .findAny()
+                .ifPresentOrElse(
+                        s -> System.out.println("findAny() (parallel): " + s.getName()),
+                        () -> System.out.println("findAny(): no matching student")
+                );
+
+        boolean anyHighGpa = students.stream().anyMatch(s -> s.computeGPA() > 3.8);
+        boolean noneBelowZeroGpa = students.stream().noneMatch(s -> s.computeGPA() < 0);
+        System.out.println("anyMatch(GPA > 3.8): " + anyHighGpa);
+        System.out.println("noneMatch(GPA < 0): " + noneBelowZeroGpa);
+    }
+
+    // 2. Group students by GPA range using groupingBy and collect
+    private static void streamGroupStudentsByGpaRange() {
+        if (students.isEmpty()) {
+            System.out.println("No students in system.");
+            return;
+        }
+
+        long start = System.nanoTime();
+        Map<String, List<Student>> byRange = students.stream()
+                .collect(Collectors.groupingBy(Menu::gpaRangeLabel));
+        long durationMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
+
+        System.out.println("\nStudents grouped by GPA range:");
+        byRange.forEach((range, list) -> {
+            System.out.printf("%s -> %d students%n", range, list.size());
+        });
+        System.out.println("Execution time: " + durationMs + " ms");
+    }
+
+    private static String gpaRangeLabel(Student s) {
+        double gpa = s.computeGPA();
+        if (gpa >= 3.5) return "Honors (>=3.5)";
+        if (gpa >= 3.0) return "Strong (3.0 - 3.49)";
+        if (gpa >= 2.0) return "Average (2.0 - 2.99)";
+        if (gpa > 0.0) return "Below Average (0 - 1.99)";
+        return "No GPA";
+    }
+
+    // 3. Average grade per subject using streams over GradeManager
+    private static void streamAverageGradePerSubject() {
+        if (gradeManager.getGradeCount() == 0) {
+            System.out.println("No grades recorded.");
+            return;
+        }
+
+        long start = System.nanoTime();
+        Map<String, Double> avgBySubject = java.util.Arrays.stream(gradeManager.grades, 0, gradeManager.getGradeCount())
+                .filter(g -> g != null)
+                .collect(Collectors.groupingBy(
+                        g -> g.getSubject().getSubjectName(),
+                        Collectors.averagingDouble(Grade::getGrade)
+                ));
+        long durationMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
+
+        System.out.println("\nAverage grade per subject:");
+        avgBySubject.forEach((subject, avg) ->
+                System.out.printf("%-25s : %.2f%n", subject, avg));
+        System.out.println("Execution time: " + durationMs + " ms");
+    }
+
+    // 4. Extract unique course codes
+    private static void streamUniqueCourseCodes() {
+        if (gradeManager.getGradeCount() == 0) {
+            System.out.println("No grades recorded.");
+            return;
+        }
+
+        long start = System.nanoTime();
+        Set<String> uniqueCodes = java.util.Arrays.stream(gradeManager.grades, 0, gradeManager.getGradeCount())
+                .filter(g -> g != null && g.getSubject() != null)
+                .map(g -> g.getSubject().getSubjectCode())
+                .filter(code -> code != null && !code.isEmpty())
+                .collect(Collectors.toSet());
+        long durationMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
+
+        System.out.println("\nUnique course codes used in recorded grades:");
+        uniqueCodes.forEach(System.out::println);
+        System.out.println("Execution time: " + durationMs + " ms");
+    }
+
+    // 5. Find top 5 students by average grade (chained: filter -> map/sort -> limit -> collect)
+    private static void streamTop5ByAverageGrade() {
+        if (students.isEmpty()) {
+            System.out.println("No students in system.");
+            return;
+        }
+
+        long start = System.nanoTime();
+        List<Student> top5 = students.stream()
+                .filter(s -> s.getEnrolledSubjects() > 0)
+                .sorted((a, b) -> Double.compare(b.getAverageGrade(), a.getAverageGrade()))
+                .limit(5)
+                .collect(Collectors.toList());
+        long durationMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
+
+        System.out.println("\nTop 5 students by average grade:");
+        int rank = 1;
+        for (Student s : top5) {
+            System.out.printf("%d. %-20s | ID: %d | Avg Grade: %.2f | GPA: %.2f%n",
+                    rank++, s.getName(), s.getId(), s.getAverageGrade(), s.computeGPA());
+        }
+        System.out.println("Execution time: " + durationMs + " ms");
+    }
+
+    // 6. Partition students by honors eligibility using partitioningBy
+    private static void streamPartitionHonorsEligibility() {
+        if (students.isEmpty()) {
+            System.out.println("No students in system.");
+            return;
+        }
+
+        long start = System.nanoTime();
+        Map<Boolean, List<Student>> partitioned = students.stream()
+                .collect(Collectors.partitioningBy(Student::isEligibleForHonors));
+        long durationMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
+
+        System.out.println("\nPartitioned students by honors eligibility:");
+        System.out.println("Eligible for honors: " + partitioned.get(true).size());
+        System.out.println("Not eligible: " + partitioned.get(false).size());
+        System.out.println("Execution time: " + durationMs + " ms");
+    }
+
+    // 7. Process a large CSV file using Files.lines() stream
+    private static void streamProcessLargeCsv() {
+        System.out.print("Enter CSV file name in ./imports (without extension): ");
+        String fileName = scanner.nextLine().trim();
+        Path path = Path.of("./imports/" + fileName + ".csv");
+
+        if (!path.toFile().exists()) {
+            System.out.println("File not found: " + path.toAbsolutePath());
+            return;
+        }
+
+        try {
+            long startSeq = System.nanoTime();
+            long validLines;
+            try (Stream<String> lines = Files.lines(path)) {
+                validLines = lines
+                        .skip(1) // skip header
+                        .filter(line -> !line.trim().isEmpty())
+                        .count();
+            }
+            long seqMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startSeq);
+
+            long startPar = System.nanoTime();
+            long validLinesParallel;
+            try (Stream<String> lines = Files.lines(path).parallel()) {
+                validLinesParallel = lines
+                        .skip(1)
+                        .filter(line -> !line.trim().isEmpty())
+                        .count();
+            }
+            long parMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startPar);
+
+            System.out.println("\nCSV processing with Files.lines():");
+            System.out.println("Valid (non-empty) data rows: " + validLines);
+            System.out.println("Sequential stream time: " + seqMs + " ms");
+            System.out.println("Parallel stream time:   " + parMs + " ms");
+        } catch (Exception e) {
+            System.out.println("Error processing CSV: " + e.getMessage());
+        }
+    }
+
+    // 8. Compare sequential vs parallel stream processing on in-memory data
+    private static void streamSequentialVsParallelComparison() {
+        if (students.isEmpty()) {
+            System.out.println("No students in system.");
+            return;
+        }
+
+        // Simple heavy-ish operation: sum of GPA for students with GPA > 2.5
+        long startSeq = System.nanoTime();
+        double sumSeq = students.stream()
+                .mapToDouble(Student::computeGPA)
+                .filter(gpa -> gpa > 2.5)
+                .sum();
+        long seqMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startSeq);
+
+        long startPar = System.nanoTime();
+        double sumPar = students.parallelStream()
+                .mapToDouble(Student::computeGPA)
+                .filter(gpa -> gpa > 2.5)
+                .sum();
+        long parMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startPar);
+
+        System.out.println("\nSequential vs Parallel stream comparison (GPA > 2.5 sum):");
+        System.out.printf("Sequential sum: %.2f (time: %d ms)%n", sumSeq, seqMs);
+        System.out.printf("Parallel   sum: %.2f (time: %d ms)%n", sumPar, parMs);
     }
 }
 
