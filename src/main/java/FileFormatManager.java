@@ -587,11 +587,12 @@ public class FileFormatManager {
         Menu.gradeManager.addGrade(newGrade);
     }
 
+    /**
+     * Optimized student lookup.
+     * Big-O: O(1) average using HashMap-backed index (Menu.studentIndex).
+     */
     private Student findStudentById(int studentId) {
-        for (Student s : Menu.students) {
-            if (s.id == studentId) return s;
-        }
-        return null;
+        return Menu.studentIndex.get(String.valueOf(studentId));
     }
 
     private String formatBytes(long bytes) {

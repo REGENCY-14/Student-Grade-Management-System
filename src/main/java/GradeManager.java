@@ -206,10 +206,11 @@ public class GradeManager implements IGradeManager {
         }
     }
 
+    /**
+     * Optimized student lookup.
+     * Big-O: O(1) average using HashMap-backed index (Menu.studentIndex).
+     */
     private Student findStudentById(int studentId) {
-        for (Student s : Menu.students) {
-            if (s.id == studentId) return s;
-        }
-        return null;
+        return Menu.studentIndex.get(String.valueOf(studentId));
     }
 }

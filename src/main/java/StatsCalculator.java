@@ -211,14 +211,13 @@ public class StatsCalculator extends Thread {
     }
     
     /**
-     * Find student by ID from the students list
+     * Find student by ID.
+     * Big-O: O(1) average using HashMap-backed index (Menu.studentIndex),
+     * instead of O(n) linear scan from the original lab implementation.
      */
     private Student findStudentById(int studentId) {
         if (students == null) return null;
-        return students.stream()
-                .filter(s -> s.getId() == studentId)
-                .findFirst()
-                .orElse(null);
+        return Menu.studentIndex.get(String.valueOf(studentId));
     }
     
     /**

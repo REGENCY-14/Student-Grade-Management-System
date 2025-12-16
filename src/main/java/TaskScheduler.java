@@ -11,6 +11,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.PriorityQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -30,8 +31,12 @@ public class TaskScheduler {
     private final ScheduledExecutorService scheduler;
     private final GradeManager gradeManager;
     private final ArrayList<Student> students;
+    // Active schedules indexed by taskId. Big-O: put/get/remove -> O(1) average.
     private final Map<String, ScheduledFuture<?>> activeSchedules;
     private final ConcurrentHashMap<String, ScheduledTask> taskConfigs;
+    // Priority queue for upcoming task executions (soonest next run first).
+    // Big-O: insert -> O(log n), poll -> O(log n), peek -> O(1).
+    private final PriorityQueue<ScheduledTask> priorityQueue;
     private final ConcurrentHashMap<String, TaskExecutionLog> executionLogs;
     
     /**
@@ -73,6 +78,9 @@ public class TaskScheduler {
         });
         this.activeSchedules = new ConcurrentHashMap<>();
         this.taskConfigs = new ConcurrentHashMap<>();
+        this.priorityQueue = new PriorityQueue<>((a, b) ->
+                a.getNextExecutionTime(LocalDateTime.now())
+                        .compareTo(b.getNextExecutionTime(LocalDateTime.now())));
         this.executionLogs = new ConcurrentHashMap<>();
         
         // Initialize logs directory
@@ -133,6 +141,9 @@ public class TaskScheduler {
         );
         
         activeSchedules.put(task.taskId, future);
+        synchronized (priorityQueue) {
+            priorityQueue.offer(task);
+        }
         
         System.out.println("✓ Task scheduled: " + task.description + 
                 " (Next execution: " + nextExecution.format(TIME_FORMAT) + ")");
@@ -446,6 +457,9 @@ public class TaskScheduler {
         if (future != null) {
             future.cancel(false);
             taskConfigs.remove(taskId);
+            synchronized (priorityQueue) {
+                priorityQueue.removeIf(t -> t.taskId.equals(taskId));
+            }
             System.out.println("✓ Task removed: " + taskId);
         }
     }

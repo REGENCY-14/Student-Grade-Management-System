@@ -25,7 +25,13 @@ public class Menu {
 
 
     static Scanner scanner = new Scanner(System.in);
+    // Primary student list preserves insertion order. O(1) append, O(1) average access.
+    // Big-O: add -> O(1) amortized, get by index -> O(1).
     static ArrayList<Student> students = new ArrayList<>();
+
+    // Optimized student index for O(1) lookup by ID (converted to String as key).
+    // Big-O: put/get/remove -> O(1) average time using hashing.
+    static java.util.HashMap<String, Student> studentIndex = new java.util.HashMap<>();
     static int studentIdCounter = 1000;
     static ArrayList<Grade> grades = new ArrayList<>();
     static GradeManager gradeManager = new GradeManager();
@@ -191,7 +197,8 @@ public class Menu {
                 int id = studentIdCounter++;
 
                 Student newStudent = StudentFactory.createStudent(type, id, name, age, email, phone);
-                students.add(newStudent);
+                students.add(newStudent); // O(1) append
+                studentIndex.put(String.valueOf(newStudent.getId()), newStudent); // O(1) average
                 // cache newly added student
                 try {
                     CacheManager.getInstance().put("student:" + newStudent.getId(), newStudent);
