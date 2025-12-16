@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 
 public class RegexSearchEngine {
 
-    private static class SearchResult {
+    public static class SearchResult {
         Student student;
         String matchedField;
         String matchedValue;
@@ -23,7 +23,7 @@ public class RegexSearchEngine {
         }
     }
 
-    private static class SearchStats {
+    public static class SearchStats {
         int totalScanned;
         int matchesFound;
         long searchTimeMs;
@@ -66,15 +66,20 @@ public class RegexSearchEngine {
             
             for (Student s : Menu.students) {
                 stats.totalScanned++;
-                String emailDomain = extractDomain(s.email);
+                Student student = s;
+                try {
+                    Object c = CacheManager.getInstance().get("student:" + s.getId());
+                    if (c instanceof Student) student = (Student) c;
+                } catch (Exception ex) { }
+                String emailDomain = extractDomain(student.getEmail());
                 Matcher matcher = pattern.matcher(emailDomain);
-                
+
                 if (matcher.find()) {
                     String highlighted = highlightMatch(emailDomain, matcher);
-                    SearchResult result = new SearchResult(s, "Email Domain", emailDomain, highlighted);
+                    SearchResult result = new SearchResult(student, "Email Domain", emailDomain, highlighted);
                     currentResults.add(result);
                     stats.matchesFound++;
-                    addDistributionStats(s);
+                    addDistributionStats(student);
                 }
             }
             
@@ -104,15 +109,20 @@ public class RegexSearchEngine {
             
             for (Student s : Menu.students) {
                 stats.totalScanned++;
-                String idStr = String.valueOf(s.id);
+                Student student = s;
+                try {
+                    Object c = CacheManager.getInstance().get("student:" + s.getId());
+                    if (c instanceof Student) student = (Student) c;
+                } catch (Exception ex) { }
+                String idStr = String.valueOf(student.getId());
                 Matcher matcher = pattern.matcher(idStr);
-                
+
                 if (matcher.find()) {
                     String highlighted = highlightMatch(idStr, matcher);
-                    SearchResult result = new SearchResult(s, "Student ID", idStr, highlighted);
+                    SearchResult result = new SearchResult(student, "Student ID", idStr, highlighted);
                     currentResults.add(result);
                     stats.matchesFound++;
-                    addDistributionStats(s);
+                    addDistributionStats(student);
                 }
             }
             
@@ -142,14 +152,19 @@ public class RegexSearchEngine {
             
             for (Student s : Menu.students) {
                 stats.totalScanned++;
-                Matcher matcher = pattern.matcher(s.name);
-                
+                Student student = s;
+                try {
+                    Object c = CacheManager.getInstance().get("student:" + s.getId());
+                    if (c instanceof Student) student = (Student) c;
+                } catch (Exception ex) { }
+                Matcher matcher = pattern.matcher(student.getName());
+
                 if (matcher.find()) {
-                    String highlighted = highlightMatch(s.name, matcher);
-                    SearchResult result = new SearchResult(s, "Name", s.name, highlighted);
+                    String highlighted = highlightMatch(student.getName(), matcher);
+                    SearchResult result = new SearchResult(student, "Name", student.getName(), highlighted);
                     currentResults.add(result);
                     stats.matchesFound++;
-                    addDistributionStats(s);
+                    addDistributionStats(student);
                 }
             }
             
@@ -179,17 +194,22 @@ public class RegexSearchEngine {
             
             for (Student s : Menu.students) {
                 stats.totalScanned++;
-                String fieldValue = getFieldValue(s, fieldName);
-                
+                Student student = s;
+                try {
+                    Object c = CacheManager.getInstance().get("student:" + s.getId());
+                    if (c instanceof Student) student = (Student) c;
+                } catch (Exception ex) { }
+                String fieldValue = getFieldValue(student, fieldName);
+
                 if (fieldValue != null) {
                     Matcher matcher = compiledPattern.matcher(fieldValue);
-                    
+
                     if (matcher.find()) {
                         String highlighted = highlightMatch(fieldValue, matcher);
-                        SearchResult result = new SearchResult(s, fieldName, fieldValue, highlighted);
+                        SearchResult result = new SearchResult(student, fieldName, fieldValue, highlighted);
                         currentResults.add(result);
                         stats.matchesFound++;
-                        addDistributionStats(s);
+                        addDistributionStats(student);
                     }
                 }
             }
@@ -431,6 +451,125 @@ public class RegexSearchEngine {
         System.out.println("  • Use [0-9]+ for numbers, [a-z]+ for lowercase letters");
         System.out.println("  • Use .* for any characters, .+ for at least one character");
         System.out.println();
+    }
+
+    // Overloaded methods for Menu integration (without boolean parameter)
+    public ArrayList<SearchResult> searchByEmailDomain(String domainPattern) {
+        searchByEmailDomain(domainPattern, false);
+        return new ArrayList<>(currentResults);
+    }
+
+    public ArrayList<SearchResult> searchByIdPattern(String idPattern) {
+        searchByIdPattern(idPattern, false);
+        return new ArrayList<>(currentResults);
+    }
+
+    public ArrayList<SearchResult> searchByNamePattern(String namePattern) {
+        searchByNamePattern(namePattern, false);
+        return new ArrayList<>(currentResults);
+    }
+
+    public ArrayList<SearchResult> searchByPhoneAreaCode(String areaCodePattern) {
+        long startTime = System.currentTimeMillis();
+        this.caseInsensitive = false;
+        this.lastPattern = areaCodePattern;
+        
+        currentResults.clear();
+        stats = new SearchStats();
+        stats.totalStudents = Menu.students.size();
+        
+        try {
+            Pattern pattern = Pattern.compile(areaCodePattern);
+            
+            for (Student s : Menu.students) {
+                stats.totalScanned++;
+                String areaCode = extractAreaCode(s.getPhone());
+                Matcher matcher = pattern.matcher(areaCode);
+                
+                if (matcher.find()) {
+                    String highlighted = highlightMatch(areaCode, matcher);
+                    SearchResult result = new SearchResult(s, "Phone Area Code", areaCode, highlighted);
+                    currentResults.add(result);
+                    stats.matchesFound++;
+                    addDistributionStats(s);
+                }
+            }
+            
+        } catch (PatternSyntaxException e) {
+            throwPatternError(e);
+        }
+        
+        stats.searchTimeMs = System.currentTimeMillis() - startTime;
+        return new ArrayList<>(currentResults);
+    }
+
+    public ArrayList<SearchResult> searchByCustomPattern(String field, String pattern) {
+        searchByCustomPattern(pattern, field, false);
+        return new ArrayList<>(currentResults);
+    }
+
+    private String extractAreaCode(String phone) {
+        if (phone == null || phone.isEmpty()) return "";
+        // Assuming format like (123) 456-7890
+        int start = phone.indexOf('(');
+        int end = phone.indexOf(')');
+        if (start >= 0 && end > start) {
+            return phone.substring(start + 1, end);
+        }
+        // Fallback: first 3 digits
+        String digits = phone.replaceAll("[^0-9]", "");
+        return digits.substring(0, Math.min(3, digits.length()));
+    }
+
+    public void displayResults(ArrayList<SearchResult> results) {
+        if (results.isEmpty()) return;
+        
+        for (SearchResult result : results) {
+            System.out.println("► " + result.student.getName() + " (ID: " + result.student.getId() + ") - " + result.highlightedMatch + " ◄");
+        }
+    }
+
+    public void displaySearchStatsMenu() {
+        if (stats == null) return;
+        
+        System.out.println("Pattern: " + lastPattern);
+        System.out.println("Total Scanned: " + stats.totalScanned + " students");
+        System.out.println("Matches Found: " + stats.matchesFound);
+        System.out.println("Search Time: " + stats.searchTimeMs + "ms");
+        System.out.println("Match Rate: " + String.format("%.2f%%", (stats.matchesFound * 100.0 / stats.totalScanned)));
+        System.out.println("Pattern Complexity: " + getPatternComplexityHint(lastPattern));
+    }
+
+    public void performBulkOperation(ArrayList<SearchResult> results, String operation) {
+        if (operation.equalsIgnoreCase("csv")) {
+            System.out.println("\nExporting to CSV format:");
+            System.out.println("StudentID,Name,Email,Phone,GPA,Type,Status");
+            for (SearchResult result : results) {
+                Student s = result.student;
+                System.out.println(s.getId() + "," + s.getName() + "," + s.getEmail() + "," + 
+                                  s.getPhone() + "," + String.format("%.2f", s.computeGPA()) + "," +
+                                  s.getType() + "," + s.getStatus());
+            }
+        } else if (operation.equalsIgnoreCase("stats")) {
+            System.out.println("\nSearch Statistics:");
+            System.out.println("Total Matches: " + results.size());
+            
+            double avgGPA = results.stream()
+                .mapToDouble(r -> r.student.computeGPA())
+                .average()
+                .orElse(0);
+            System.out.println("Average GPA: " + String.format("%.2f", avgGPA));
+            
+            long honors = results.stream()
+                .filter(r -> r.student instanceof HonorsStudent)
+                .count();
+            System.out.println("Honors Students: " + honors);
+            
+            long regular = results.stream()
+                .filter(r -> r.student instanceof RegularStudent)
+                .count();
+            System.out.println("Regular Students: " + regular);
+        }
     }
 
     public List<Student> getCurrentResults() {

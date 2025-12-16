@@ -82,13 +82,25 @@ public class ConcurrentReportGenerator {
                 // Write report to file (thread-safe)
                 String filePath = writeReportToFile(reportContent, student);
                 
-                // Update statistics
+                // Update statistics (prefer cached report summary when available)
                 stats.filePath = filePath;
                 stats.success = true;
                 stats.generationTimeMs = System.currentTimeMillis() - startTime;
-                stats.gradesCount = ConcurrentReportGenerator.this.countGradesForStudent(student.getId());
-                stats.averageGrade = ConcurrentReportGenerator.this.calculateStudentAverage(student.getId());
-                
+                try {
+                    Object rep = CacheManager.getInstance().get("report:" + student.getId());
+                    if (rep instanceof CacheManager.CacheReport) {
+                        CacheManager.CacheReport cr = (CacheManager.CacheReport) rep;
+                        stats.gradesCount = cr.grades.size();
+                        stats.averageGrade = cr.overallAvg;
+                    } else {
+                        stats.gradesCount = ConcurrentReportGenerator.this.countGradesForStudent(student.getId());
+                        stats.averageGrade = ConcurrentReportGenerator.this.calculateStudentAverage(student.getId());
+                    }
+                } catch (Exception ex) {
+                    stats.gradesCount = ConcurrentReportGenerator.this.countGradesForStudent(student.getId());
+                    stats.averageGrade = ConcurrentReportGenerator.this.calculateStudentAverage(student.getId());
+                }
+
                 // Update progress
                 progressTracker.reportCompleted(student.getName(), stats.generationTimeMs);
                 
@@ -260,9 +272,16 @@ public class ConcurrentReportGenerator {
         CountDownLatch completionLatch = new CountDownLatch(students.size());
         
         try {
-            // Submit all tasks
+            // Submit all tasks (prefer cached Student objects)
             for (Student student : students) {
-                ReportTask task = new ReportTask(student, completionLatch);
+                Student toUse = student;
+                try {
+                    Object cached = CacheManager.getInstance().getOrLoad("student:" + student.getId(), k -> student);
+                    if (cached instanceof Student) toUse = (Student) cached;
+                } catch (Exception ex) {
+                    // ignore cache errors and fall back to original
+                }
+                ReportTask task = new ReportTask(toUse, completionLatch);
                 reportTasks.add(task);
                 executorService.submit(task);
             }

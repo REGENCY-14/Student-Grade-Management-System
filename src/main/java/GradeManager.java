@@ -1,8 +1,8 @@
-import exception.StudentNotFoundException;
-import exception.GradeStorageFullException;
-
 import java.util.ArrayList;
 import java.util.Comparator;
+
+import exception.GradeStorageFullException;
+import exception.StudentNotFoundException;
 
 public class GradeManager implements IGradeManager {
 
@@ -19,6 +19,13 @@ public class GradeManager implements IGradeManager {
         if (gradeCount < grades.length) {
             grades[gradeCount++] = grade;
             updateStudentAverage(grade.getStudentId());
+            // invalidate cache entries related to this student
+            try {
+                CacheManager.getInstance().invalidate("student:" + grade.getStudentId());
+                CacheManager.getInstance().invalidate("report:" + grade.getStudentId());
+            } catch (Exception ex) {
+                // ignore cache errors
+            }
         } else {
             throw new GradeStorageFullException("Cannot add grade. Storage limit of " + grades.length + " reached.");
         }
@@ -160,6 +167,15 @@ public class GradeManager implements IGradeManager {
             }
         }
         return studentGrades;
+    }
+
+    // Safe wrapper for external callers that should not throw
+    public double calculateOverallAverageSafe(int studentId) {
+        try {
+            return calculateOverallAverage(studentId);
+        } catch (StudentNotFoundException ex) {
+            return -1;
+        }
     }
 
     // ---------------- Helper methods ----------------

@@ -31,6 +31,26 @@ public class Menu {
         // Initialize task scheduler
         taskScheduler = new TaskScheduler(gradeManager, students);
         taskScheduler.createDefaultTasks();
+        // Initialize cache manager and register refreshers
+        CacheManager cache = CacheManager.getInstance();
+        // refresher for student: keys like "student:123"
+        cache.registerRefresher("student:", key -> {
+            try {
+                int id = Integer.parseInt(key.split(":")[1]);
+                for (Student s : students) if (s.getId() == id) return s;
+            } catch (Exception e) { }
+            return null;
+        });
+        // refresher for report: recreate lightweight report
+        cache.registerRefresher("report:", key -> {
+            try {
+                int id = Integer.parseInt(key.split(":")[1]);
+                return new CacheManager.CacheReport(id, gradeManager.getGradesForStudent(id), gradeManager.calculateOverallAverageSafe(id));
+            } catch (Exception e) { }
+            return null;
+        });
+        // cache warming: warm up first 50 students if present
+        cache.warmUpStudents(students, gradeManager, 50);
         
         // Add shutdown hook for graceful scheduler shutdown
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -70,7 +90,11 @@ public class Menu {
                 launchStatisticsDashboard();
             } else if (choice == 12) {
                 openScheduledTasksMenu();
+            } else if (choice == 13) {
+                advancedPatternSearch();
             } else if (choice == 14) {
+                openCacheMenu();
+            } else if (choice == 16) {
                 running = false;
                 System.out.println("Thank you for using grade management system!");
                 System.out.println("Goodbye");
@@ -107,8 +131,10 @@ public class Menu {
 
         System.out.println("\n--- ADVANCED FEATURES ---");
         System.out.println("12. Scheduled Automated Tasks");
+        System.out.println("13. Advanced Pattern Based Search");
+        System.out.println("14. Cache Management");
 
-        System.out.println("14. Exit");
+        System.out.println("16. Exit");
 
         System.out.print("\nEnter choice: ");
     }
@@ -153,6 +179,12 @@ public class Menu {
 
                 Student newStudent = StudentFactory.createStudent(type, id, name, age, email, phone);
                 students.add(newStudent);
+                // cache newly added student
+                try {
+                    CacheManager.getInstance().put("student:" + newStudent.getId(), newStudent);
+                } catch (Exception ex) {
+                    // ignore cache errors
+                }
                 System.out.println(newStudent.getType() + " student added!");
 
 
@@ -1562,8 +1594,271 @@ public class Menu {
             scanner.nextLine();
         }
     }
-}
 
+    private static void advancedPatternSearch() {
+        RegexSearchEngine searchEngine = new RegexSearchEngine();
+        boolean searching = true;
+
+        while (searching) {
+            System.out.println("\n" + "=".repeat(60));
+            System.out.println("        ADVANCED PATTERN BASED SEARCH");
+            System.out.println("=".repeat(60));
+            System.out.println("1. Search by Email Domain Pattern");
+            System.out.println("2. Search by Phone Area Code Pattern");
+            System.out.println("3. Search by Student ID Pattern (with wildcards)");
+            System.out.println("4. Search by Name Pattern (Regex)");
+            System.out.println("5. Custom Regex Pattern Search");
+            System.out.println("6. Back to Main Menu");
+            System.out.print("\nSelect option: ");
+
+            try {
+                int choice = scanner.nextInt();
+                scanner.nextLine();
+
+                switch (choice) {
+                    case 1:
+                        searchByEmailDomain(searchEngine);
+                        break;
+                    case 2:
+                        searchByPhoneAreaCode(searchEngine);
+                        break;
+                    case 3:
+                        searchByStudentIdPattern(searchEngine);
+                        break;
+                    case 4:
+                        searchByNamePattern(searchEngine);
+                        break;
+                    case 5:
+                        customPatternSearch(searchEngine);
+                        break;
+                    case 6:
+                        searching = false;
+                        System.out.println("Returning to main menu...");
+                        break;
+                    default:
+                        System.out.println("Invalid option. Please try again.");
+                }
+            } catch (Exception e) {
+                System.out.println("Error: " + e.getMessage());
+                scanner.nextLine();
+            }
+        }
+    }
+
+    private static void searchByEmailDomain(RegexSearchEngine searchEngine) {
+        System.out.println("\n" + "-".repeat(60));
+        System.out.println("Search by Email Domain Pattern");
+        System.out.println("-".repeat(60));
+        System.out.print("Enter domain pattern (e.g., gmail\\.com, yahoo\\..*): ");
+        String pattern = scanner.nextLine();
+
+        System.out.println("\nSearching...");
+        ArrayList<RegexSearchEngine.SearchResult> results = searchEngine.searchByEmailDomain(pattern);
+
+        displaySearchResults(results, searchEngine, "Email Domain");
+    }
+
+    private static void searchByPhoneAreaCode(RegexSearchEngine searchEngine) {
+        System.out.println("\n" + "-".repeat(60));
+        System.out.println("Search by Phone Area Code Pattern");
+        System.out.println("-".repeat(60));
+        System.out.print("Enter area code pattern (e.g., 212, 555, [2-5]1[0-5]): ");
+        String pattern = scanner.nextLine();
+
+        System.out.println("\nSearching...");
+        ArrayList<RegexSearchEngine.SearchResult> results = searchEngine.searchByPhoneAreaCode(pattern);
+
+        displaySearchResults(results, searchEngine, "Phone Area Code");
+    }
+
+    private static void searchByStudentIdPattern(RegexSearchEngine searchEngine) {
+        System.out.println("\n" + "-".repeat(60));
+        System.out.println("Search by Student ID Pattern (with wildcards)");
+        System.out.println("-".repeat(60));
+        System.out.println("Examples:");
+        System.out.println("  10.*    - IDs starting with 10");
+        System.out.println("  1[0-2].* - IDs starting with 10, 11, or 12");
+        System.out.println("  .*5$    - IDs ending with 5");
+        System.out.print("\nEnter ID pattern: ");
+        String pattern = scanner.nextLine();
+
+        System.out.println("\nSearching...");
+        ArrayList<RegexSearchEngine.SearchResult> results = searchEngine.searchByIdPattern(pattern);
+
+        displaySearchResults(results, searchEngine, "Student ID");
+    }
+
+    private static void searchByNamePattern(RegexSearchEngine searchEngine) {
+        System.out.println("\n" + "-".repeat(60));
+        System.out.println("Search by Name Pattern (Regex)");
+        System.out.println("-".repeat(60));
+        System.out.println("Examples:");
+        System.out.println("  ^A.*     - Names starting with A");
+        System.out.println("  .*Smith$ - Names ending with Smith");
+        System.out.println("  ^J.*n$   - Names starting with J and ending with n");
+        System.out.print("\nEnter name pattern: ");
+        String pattern = scanner.nextLine();
+
+        System.out.println("\nSearching...");
+        ArrayList<RegexSearchEngine.SearchResult> results = searchEngine.searchByNamePattern(pattern);
+
+        displaySearchResults(results, searchEngine, "Student Name");
+    }
+
+    private static void customPatternSearch(RegexSearchEngine searchEngine) {
+        System.out.println("\n" + "-".repeat(60));
+        System.out.println("Custom Regex Pattern Search");
+        System.out.println("-".repeat(60));
+        System.out.println("Select field to search:");
+        System.out.println("1. Student ID");
+        System.out.println("2. Name");
+        System.out.println("3. Email");
+        System.out.println("4. Phone");
+        System.out.print("Select field: ");
+
+        try {
+            int fieldChoice = scanner.nextInt();
+            scanner.nextLine();
+
+            String field;
+            switch (fieldChoice) {
+                case 1:
+                    field = "id";
+                    break;
+                case 2:
+                    field = "name";
+                    break;
+                case 3:
+                    field = "email";
+                    break;
+                case 4:
+                    field = "phone";
+                    break;
+                default:
+                    System.out.println("Invalid field selection.");
+                    return;
+            }
+
+            System.out.print("Enter regex pattern: ");
+            String pattern = scanner.nextLine();
+
+            System.out.println("\nSearching...");
+            ArrayList<RegexSearchEngine.SearchResult> results = searchEngine.searchByCustomPattern(field, pattern);
+
+            displaySearchResults(results, searchEngine, field);
+        } catch (Exception e) {
+            System.out.println("Error: " + e.getMessage());
+            scanner.nextLine();
+        }
+    }
+
+    private static void displaySearchResults(ArrayList<RegexSearchEngine.SearchResult> results, 
+                                              RegexSearchEngine searchEngine, String searchType) {
+        if (results.isEmpty()) {
+            System.out.println("No matches found.");
+            return;
+        }
+
+        System.out.println("\n" + "=".repeat(60));
+        System.out.println("SEARCH RESULTS - " + results.size() + " match(es) found");
+        System.out.println("=".repeat(60));
+
+        // Display results with highlighting
+        searchEngine.displayResults(results);
+
+        // Display statistics
+        System.out.println("\n" + "-".repeat(60));
+        searchEngine.displaySearchStatsMenu();
+        System.out.println("-".repeat(60));
+
+        // Bulk operations
+        System.out.println("\nBulk Operations:");
+        System.out.println("1. View Full Details");
+        System.out.println("2. Export to CSV");
+        System.out.println("3. View Statistics");
+        System.out.println("4. Back to Pattern Search");
+        System.out.print("Select option: ");
+
+        try {
+            int choice = scanner.nextInt();
+            scanner.nextLine();
+
+            switch (choice) {
+                case 1:
+                    for (RegexSearchEngine.SearchResult result : results) {
+                        System.out.println("\n" + "-".repeat(40));
+                        System.out.println("Student: " + result.student.getName());
+                        System.out.println("ID: " + result.student.getId());
+                        System.out.println("Email: " + result.student.getEmail());
+                        System.out.println("Phone: " + result.student.getPhone());
+                        System.out.println("GPA: " + String.format("%.2f", result.student.computeGPA()));
+                        System.out.println("Status: " + result.student.getStatus());
+                        System.out.println("Matched Field: " + result.matchedField);
+                        System.out.println("Match Value: " + result.highlightedMatch);
+                    }
+                    break;
+                case 2:
+                    searchEngine.performBulkOperation(results, "csv");
+                    break;
+                case 3:
+                    searchEngine.performBulkOperation(results, "stats");
+                    break;
+                case 4:
+                    return;
+            }
+        } catch (Exception e) {
+            System.out.println("Error: " + e.getMessage());
+            scanner.nextLine();
+        }
+    }
+
+    private static void openCacheMenu() {
+        CacheManager cache = CacheManager.getInstance();
+        boolean inCacheMenu = true;
+        while (inCacheMenu) {
+            System.out.println("\n" + "=".repeat(50));
+            System.out.println("CACHE MANAGEMENT");
+            System.out.println("=".repeat(50));
+            System.out.println("1. Display Cache Statistics");
+            System.out.println("2. Display Cache Contents");
+            System.out.println("3. Clear Cache");
+            System.out.println("4. Warm Cache (top N students)");
+            System.out.println("5. Back to Main Menu");
+            System.out.print("Select option: ");
+            try {
+                int choice = scanner.nextInt();
+                scanner.nextLine();
+                switch (choice) {
+                    case 1:
+                        cache.displayStats();
+                        break;
+                    case 2:
+                        cache.displayContents();
+                        break;
+                    case 3:
+                        cache.clear();
+                        System.out.println("Cache cleared.");
+                        break;
+                    case 4:
+                        System.out.print("Enter number of students to warm (e.g., 50): ");
+                        int n = scanner.nextInt();
+                        scanner.nextLine();
+                        cache.warmUpStudents(students, gradeManager, n);
+                        System.out.println("Cache warmed for top " + n + " students.");
+                        break;
+                    case 5:
+                        inCacheMenu = false;
+                        break;
+                    default:
+                        System.out.println("Invalid option.");
+                }
+            } catch (Exception e) {
+                System.out.println("Error: " + e.getMessage());
+                scanner.nextLine();
+            }
+        }
+    }
+}
 
 
 

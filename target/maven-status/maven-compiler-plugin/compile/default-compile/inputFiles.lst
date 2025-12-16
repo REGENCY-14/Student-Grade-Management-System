@@ -1,3 +1,5 @@
+C:\Users\ZakariaOsman\IdeaProjects\StudentGradeManagementSystem\src\main\java\CacheManager.java
+C:\Users\ZakariaOsman\IdeaProjects\StudentGradeManagementSystem\src\main\java\ConcurrentReportGenerator.java
 C:\Users\ZakariaOsman\IdeaProjects\StudentGradeManagementSystem\src\main\java\CoreSubject.java
 C:\Users\ZakariaOsman\IdeaProjects\StudentGradeManagementSystem\src\main\java\ElectiveSubject.java
 C:\Users\ZakariaOsman\IdeaProjects\StudentGradeManagementSystem\src\main\java\exception\FileImportException.java
@@ -7,6 +9,7 @@ C:\Users\ZakariaOsman\IdeaProjects\StudentGradeManagementSystem\src\main\java\ex
 C:\Users\ZakariaOsman\IdeaProjects\StudentGradeManagementSystem\src\main\java\exception\InvalidStudentDataException.java
 C:\Users\ZakariaOsman\IdeaProjects\StudentGradeManagementSystem\src\main\java\exception\StudentNotFoundException.java
 C:\Users\ZakariaOsman\IdeaProjects\StudentGradeManagementSystem\src\main\java\exception\SubjectNotFoundException.java
+C:\Users\ZakariaOsman\IdeaProjects\StudentGradeManagementSystem\src\main\java\FileFormatManager.java
 C:\Users\ZakariaOsman\IdeaProjects\StudentGradeManagementSystem\src\main\java\Grade.java
 C:\Users\ZakariaOsman\IdeaProjects\StudentGradeManagementSystem\src\main\java\GradeManager.java
 C:\Users\ZakariaOsman\IdeaProjects\StudentGradeManagementSystem\src\main\java\HonorsStudent.java
@@ -16,8 +19,13 @@ C:\Users\ZakariaOsman\IdeaProjects\StudentGradeManagementSystem\src\main\java\IS
 C:\Users\ZakariaOsman\IdeaProjects\StudentGradeManagementSystem\src\main\java\IStudentInfo.java
 C:\Users\ZakariaOsman\IdeaProjects\StudentGradeManagementSystem\src\main\java\Main.java
 C:\Users\ZakariaOsman\IdeaProjects\StudentGradeManagementSystem\src\main\java\Menu.java
+C:\Users\ZakariaOsman\IdeaProjects\StudentGradeManagementSystem\src\main\java\RegexSearchEngine.java
 C:\Users\ZakariaOsman\IdeaProjects\StudentGradeManagementSystem\src\main\java\RegularStudent.java
+C:\Users\ZakariaOsman\IdeaProjects\StudentGradeManagementSystem\src\main\java\ScheduledTask.java
+C:\Users\ZakariaOsman\IdeaProjects\StudentGradeManagementSystem\src\main\java\StatisticsDashboard.java
+C:\Users\ZakariaOsman\IdeaProjects\StudentGradeManagementSystem\src\main\java\StatsCalculator.java
 C:\Users\ZakariaOsman\IdeaProjects\StudentGradeManagementSystem\src\main\java\Student.java
 C:\Users\ZakariaOsman\IdeaProjects\StudentGradeManagementSystem\src\main\java\StudentFactory.java
 C:\Users\ZakariaOsman\IdeaProjects\StudentGradeManagementSystem\src\main\java\StudentService.java
 C:\Users\ZakariaOsman\IdeaProjects\StudentGradeManagementSystem\src\main\java\Subject.java
+C:\Users\ZakariaOsman\IdeaProjects\StudentGradeManagementSystem\src\main\java\TaskScheduler.java
