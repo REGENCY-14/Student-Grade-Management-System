@@ -19,6 +19,10 @@ import java.util.concurrent.TimeUnit;
  */
 public class AuditLogger {
 
+    private static final long MAX_BYTES = 10L * 1024L * 1024L; // 10 MB
+    private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static final DateTimeFormatter TS_FMT = DateTimeFormatter.ISO_INSTANT;
+    
     private static final AuditLogger INSTANCE = new AuditLogger();
     public static AuditLogger getInstance() { return INSTANCE; }
 
@@ -29,9 +33,6 @@ public class AuditLogger {
     private volatile LocalDate currentDate = LocalDate.now();
     private volatile long bytesWritten = 0;
 
-    private static final long MAX_BYTES = 10L * 1024L * 1024L; // 10 MB
-    private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-    private static final DateTimeFormatter TS_FMT = DateTimeFormatter.ISO_INSTANT;
     private final Path logDir = Path.of("logs");
 
     private AuditLogger() {

@@ -1,6 +1,7 @@
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -138,7 +139,7 @@ public class StatsCalculator extends Thread {
     }
     
     /**
-     * Perform actual statistics calculations
+     * Perform actual statistics calculations - using Stream API exclusively
      */
     private synchronized void performStatsCalculation() {
         try {
@@ -147,40 +148,64 @@ public class StatsCalculator extends Thread {
                 return;
             }
             
-            Map<String, StudentStats> studentStatsMap = new ConcurrentHashMap<>();
-            Map<String, Integer> distribution = new ConcurrentHashMap<>();
+            // Use Stream API to build student stats map
+            Map<String, StudentStats> studentStatsMap = Arrays.stream(gradeManager.grades)
+                    .limit(gradeManager.getGradeCount())
+                    .filter(g -> g != null)
+                    .collect(Collectors.toMap(
+                            grade -> {
+                                Student student = findStudentById(grade.getStudentId());
+                                return student != null ? student.getName() : "Unknown-" + grade.getStudentId();
+                            },
+                            grade -> {
+                                StudentStats stats = new StudentStats();
+                                stats.addGrade(grade);
+                                return stats;
+                            },
+                            (existing, newStats) -> {
+                                // Merge: add all grades from newStats to existing
+                                newStats.totalGrade = existing.totalGrade + newStats.totalGrade;
+                                newStats.totalGPA = existing.totalGPA + newStats.totalGPA;
+                                newStats.count = existing.count + newStats.count;
+                                return newStats;
+                            },
+                            ConcurrentHashMap::new
+                    ));
             
-            // Calculate per-student stats
-            double totalAverage = 0;
-            double totalGPA = 0;
-            int totalCount = 0;
+            // Calculate distribution using Stream API
+            Map<String, Integer> distribution = Arrays.stream(gradeManager.grades)
+                    .limit(gradeManager.getGradeCount())
+                    .filter(g -> g != null)
+                    .collect(Collectors.toMap(
+                            g -> getGradeRange(g.getGrade()),
+                            g -> 1,
+                            Integer::sum,
+                            ConcurrentHashMap::new
+                    ));
             
-            for (int i = 0; i < gradeManager.getGradeCount(); i++) {
-                Grade grade = gradeManager.grades[i];
-                
-                if (grade != null) {
-                    // Find student by ID
-                    Student student = findStudentById(grade.getStudentId());
-                    String studentKey = student != null ? student.getName() : "Unknown-" + grade.getStudentId();
-                    
-                    studentStatsMap.computeIfAbsent(studentKey, k -> new StudentStats())
-                            .addGrade(grade);
-                    
-                    // Track grade distribution
-                    String gradeRange = getGradeRange(grade.getGrade());
-                    distribution.merge(gradeRange, 1, Integer::sum);
-                    
-                    totalAverage += grade.getGrade();
-                    totalGPA += convertGradeToGPA(grade.getGrade());
-                    totalCount++;
-                }
-            }
+            // Calculate totals using Stream API
+            double[] totals = Arrays.stream(gradeManager.grades)
+                    .limit(gradeManager.getGradeCount())
+                    .filter(g -> g != null)
+                    .collect(
+                            () -> new double[3],  // [totalAverage, totalGPA, count]
+                            (acc, grade) -> {
+                                acc[0] += grade.getGrade();
+                                acc[1] += convertGradeToGPA(grade.getGrade());
+                                acc[2]++;
+                            },
+                            (acc1, acc2) -> {
+                                acc1[0] += acc2[0];
+                                acc1[1] += acc2[1];
+                                acc1[2] += acc2[2];
+                            }
+                    );
             
             // Update thread-safe fields
-            this.totalGrades = totalCount;
+            this.totalGrades = (int) totals[2];
             this.totalStudents = studentStatsMap.size();
-            this.classAverage = totalCount > 0 ? totalAverage / totalCount : 0;
-            this.classGPA = totalCount > 0 ? totalGPA / totalCount : 0;
+            this.classAverage = totals[2] > 0 ? totals[0] / totals[2] : 0;
+            this.classGPA = totals[2] > 0 ? totals[1] / totals[2] : 0;
             this.gradeDistribution = distribution;
             
             // Calculate top performers
@@ -212,12 +237,12 @@ public class StatsCalculator extends Thread {
     
     /**
      * Find student by ID.
-     * Big-O: O(1) average using HashMap-backed index (Menu.studentIndex),
+     * Big-O: O(1) average using HashMap-backed index (ApplicationContext.getInstance().getStudentIndex()),
      * instead of O(n) linear scan from the original lab implementation.
      */
     private Student findStudentById(int studentId) {
         if (students == null) return null;
-        return Menu.studentIndex.get(String.valueOf(studentId));
+        return ApplicationContext.getInstance().getStudentIndex().get(String.valueOf(studentId));
     }
     
     /**
@@ -382,9 +407,9 @@ public class StatsCalculator extends Thread {
      * Inner class for tracking per-student statistics
      */
     private static class StudentStats {
-        private double totalGrade = 0;
-        private double totalGPA = 0;
-        private int count = 0;
+        double totalGrade = 0;
+        double totalGPA = 0;
+        int count = 0;
         
         void addGrade(Grade grade) {
             totalGrade += grade.getGrade();
@@ -410,3 +435,4 @@ public class StatsCalculator extends Thread {
         }
     }
 }
+

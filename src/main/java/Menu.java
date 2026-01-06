@@ -21,55 +21,39 @@ import exception.InvalidStudentDataException;
 import exception.StudentNotFoundException;
 import exception.SubjectNotFoundException;
 
+/**
+ * Menu Service - Provides user interface and handles user interactions
+ * Instance-based class that receives ApplicationContext for all data access
+ * Follows Single Responsibility Principle: UI/Menu logic only
+ * Follows Dependency Inversion Principle: depends on ApplicationContext abstraction
+ */
 public class Menu {
+    // Instance variables instead of static
+    private final ApplicationContext context;
+    private final Scanner scanner;
+    private final ArrayList<Student> students;
+    private final GradeManager gradeManager;
+    private final StudentService studentService;
+    private boolean running;
 
+    /**
+     * Create a new Menu service with the given application context
+     */
+    public Menu(ApplicationContext context) {
+        this.context = context;
+        this.scanner = context.getScanner();
+        this.students = context.getStudents();
+        this.gradeManager = context.getGradeManager();
+        this.studentService = context.getStudentService();
+        this.running = false;
+    }
 
-    static Scanner scanner = new Scanner(System.in);
-    // Primary student list preserves insertion order. O(1) append, O(1) average access.
-    // Big-O: add -> O(1) amortized, get by index -> O(1).
-    static ArrayList<Student> students = new ArrayList<>();
-
-    // Optimized student index for O(1) lookup by ID (converted to String as key).
-    // Big-O: put/get/remove -> O(1) average time using hashing.
-    static java.util.HashMap<String, Student> studentIndex = new java.util.HashMap<>();
-    static int studentIdCounter = 1000;
-    static ArrayList<Grade> grades = new ArrayList<>();
-    static GradeManager gradeManager = new GradeManager();
-    static StudentService studentService = new StudentService(students, 1000);
-    static TaskScheduler taskScheduler;
-
-    public static void main(String[] args) throws StudentNotFoundException, GradeStorageFullException, InvalidGradeException, SubjectNotFoundException, InvalidStudentDataException, FileImportException, InvalidReportFormatException {
-        
-        // Initialize task scheduler
-        taskScheduler = new TaskScheduler(gradeManager, students);
-        taskScheduler.createDefaultTasks();
-        // Initialize cache manager and register refreshers
-        CacheManager cache = CacheManager.getInstance();
-        // refresher for student: keys like "student:123"
-        cache.registerRefresher("student:", key -> {
-            try {
-                int id = Integer.parseInt(key.split(":")[1]);
-                for (Student s : students) if (s.getId() == id) return s;
-            } catch (Exception e) { }
-            return null;
-        });
-        // refresher for report: recreate lightweight report
-        cache.registerRefresher("report:", key -> {
-            try {
-                int id = Integer.parseInt(key.split(":")[1]);
-                return new CacheManager.CacheReport(id, gradeManager.getGradesForStudent(id), gradeManager.calculateOverallAverageSafe(id));
-            } catch (Exception e) { }
-            return null;
-        });
-        // cache warming: warm up first 50 students if present
-        cache.warmUpStudents(students, gradeManager, 50);
-        
-        // Add shutdown hook for graceful scheduler shutdown
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            if (taskScheduler != null) {
-                taskScheduler.shutdown();
-            }
-        }));        boolean running = true;
+    /**
+     * Start the menu loop - the main interaction point
+     */
+    public void start() throws StudentNotFoundException, GradeStorageFullException, InvalidGradeException, 
+                                SubjectNotFoundException, InvalidStudentDataException, FileImportException, InvalidReportFormatException {
+        running = true;
 
         while (running) {
             mainMenu();
@@ -84,32 +68,32 @@ public class Menu {
                 recordGrade();
             } else if (choice == 4) {
                 viewGradeReport();
-            }else if(choice == 5){
+            } else if (choice == 5) {
                 exportGradeReport();
-            }else if (choice == 6) {
+            } else if (choice == 6) {
+                bulkImportGrades();
+            } else if (choice == 7) {
+                bulkImportStudents();
+            } else if (choice == 8) {
+                concurrentBatchReportGeneration();
+            } else if (choice == 9) {
                 System.out.println("Enter student ID: ");
                 int studentId = scanner.nextInt();
                 viewStudentGPAReport(studentId);
-            }else if (choice == 7){
-                bulkImportGrades();
-            }else if (choice == 10){
-                concurrentBatchReportGeneration();
-            }else if (choice == 8) {
+            } else if (choice == 10) {
                 viewClassStatistics();
-            } else if (choice == 9){
-                searchStudents();
             } else if (choice == 11) {
                 launchStatisticsDashboard();
             } else if (choice == 12) {
-                openScheduledTasksMenu();
+                searchStudents();
             } else if (choice == 13) {
-                advancedPatternSearch();
+                openScheduledTasksMenu();
             } else if (choice == 14) {
-                openCacheMenu();
+                advancedPatternSearch();
             } else if (choice == 15) {
-                openAuditMenu();
+                openCacheMenu();
             } else if (choice == 16) {
-                openStreamProcessingMenu();
+                openAuditMenu();
             } else if (choice == 17) {
                 running = false;
                 System.out.println("Thank you for using grade management system!");
@@ -122,7 +106,7 @@ public class Menu {
 
 
     // MAIN MENU
-    public static void mainMenu() {
+    private void mainMenu() {
         System.out.println("============================================");
         System.out.println("||    STUDENT GRADE MANAGEMENT SYSTEM     ||");
         System.out.println("============================================");
@@ -130,27 +114,27 @@ public class Menu {
         System.out.println("1. Add Student");
         System.out.println("2. View Students");
         System.out.println("3. Record Grade");
+        System.out.println("4. View Grade Report");
 
         System.out.println("\n--- FILE OPERATIONS ---");
         System.out.println("5. Export Grade Report");
-        System.out.println("7. Bulk Import Grades");
-        System.out.println("10. Concurrent Batch Report Generation");
+        System.out.println("6. Bulk Import Grades");
+        System.out.println("7. Bulk Import Students");
+        System.out.println("8. Concurrent Batch Report Generation");
 
         System.out.println("\n--- ANALYTICS AND REPORTING ---");
-        System.out.println("4. View Grade Report");
-        System.out.println("6. Calculate Student GPA");
-        System.out.println("8. View Student Statistics");
+        System.out.println("9. Calculate Student GPA");
+        System.out.println("10. View Student Statistics");
         System.out.println("11. Real-Time Statistics Dashboard");
 
         System.out.println("\n--- SEARCH AND QUERY ---");
-        System.out.println("9. Search Students");
+        System.out.println("12. Search Students");
 
         System.out.println("\n--- ADVANCED FEATURES ---");
-        System.out.println("12. Scheduled Automated Tasks");
-        System.out.println("13. Advanced Pattern Based Search");
-        System.out.println("14. Cache Management");
-        System.out.println("15. Audit Trail");
-        System.out.println("16. Stream-Based Data Processing (Streams API Lab)");
+        System.out.println("13. Scheduled Automated Tasks");
+        System.out.println("14. Advanced Pattern Based Search");
+        System.out.println("15. Cache Management");
+        System.out.println("16. Audit Trail");
 
         System.out.println("17. Exit");
 
@@ -158,7 +142,7 @@ public class Menu {
     }
 
 
-    public static void addStudent() {
+    private void addStudent() {
         boolean valid = false;
         while (!valid) {
             try {
@@ -194,11 +178,11 @@ public class Menu {
                 int type = scanner.nextInt();
                 scanner.nextLine();
 
-                int id = studentIdCounter++;
+                int id = context.generateStudentId();
 
                 Student newStudent = StudentFactory.createStudent(type, id, name, age, email, phone);
                 students.add(newStudent); // O(1) append
-                studentIndex.put(String.valueOf(newStudent.getId()), newStudent); // O(1) average
+                context.getStudentIndex().put(String.valueOf(newStudent.getId()), newStudent); // O(1) average
                 // cache newly added student
                 try {
                     CacheManager.getInstance().put("student:" + newStudent.getId(), newStudent);
@@ -228,7 +212,7 @@ public class Menu {
 
 
     // VIEW STUDENTS
-    public static void viewStudents() {
+    private void viewStudents() {
         if (students.isEmpty()) {
             System.out.println("\nNo students have been added to the system.\n");
             return;
@@ -282,7 +266,7 @@ public class Menu {
 
 
     // RECORD GRADE
-    public static void recordGrade() {
+    private void recordGrade() {
         boolean valid = false;
         while (!valid) {
             try {
@@ -365,7 +349,7 @@ public class Menu {
 
 
     // VIEW GRADE REPORT
-    public static void viewGradeReport() {
+    private void viewGradeReport() {
         System.out.print("Enter student ID: ");
         int id = scanner.nextInt();
         scanner.nextLine();
@@ -382,7 +366,7 @@ public class Menu {
     }
 
     // CALCULATE STUDENT GPA
-    public static void viewStudentGPAReport(int studentId) {
+    private void viewStudentGPAReport(int studentId) {
         Student student = null;
         for (Student s : students) {
             if (s.id == studentId) {
@@ -451,7 +435,7 @@ public class Menu {
     }
 
     // View class statistics
-    public static void viewClassStatistics() {
+    private void viewClassStatistics() {
         if (students.isEmpty() || gradeManager.getGradeCount() == 0) {
             System.out.println("No students or grades recorded in the system yet.");
             return;
@@ -616,7 +600,7 @@ public class Menu {
     }
     
     //Export Grade Report
-    public static void exportGradeReport() {
+    private void exportGradeReport() {
         boolean valid = false;
         while (!valid) {
             try {
@@ -706,7 +690,7 @@ public class Menu {
     }
 
 
-    private static void printExportInfo(File file, String type) {
+    private void printExportInfo(File file, String type) {
         System.out.println("\nReport exported successfully!");
         System.out.println("File Name: " + file.getName());
         System.out.println("Location: " + file.getAbsolutePath());
@@ -714,13 +698,105 @@ public class Menu {
         System.out.println("What file contains: " + type + " Report\n");
     }
 
-    //BULK IMPORT GRADES
-    public static void bulkImportGrades() {
+    //BULK IMPORT GRADES - Multi-format support (CSV, JSON, Binary)
+    private void bulkImportGrades() {
         boolean valid = false;
         while (!valid) {
             try {
                 long start = System.currentTimeMillis();
                 System.out.println("------------- BULK IMPORT GRADES ----------------");
+                
+                // Select format
+                System.out.println("\nSelect import format:");
+                System.out.println("1. CSV");
+                System.out.println("2. JSON");
+                System.out.println("3. Binary");
+                System.out.print("Enter choice: ");
+                int formatChoice = scanner.nextInt();
+                scanner.nextLine();
+                
+                String format;
+                switch (formatChoice) {
+                    case 1:
+                        format = "CSV";
+                        break;
+                    case 2:
+                        format = "JSON";
+                        break;
+                    case 3:
+                        format = "BINARY";
+                        break;
+                    default:
+                        System.out.println("Invalid format choice!");
+                        continue;
+                }
+
+                System.out.print("Enter file name (without extension): ");
+                String fileName = scanner.nextLine().trim();
+                
+                FileFormatManager formatManager = new FileFormatManager();
+                FileFormatManager.FileStats stats = null;
+                
+                try {
+                    switch (format) {
+                        case "CSV":
+                            stats = formatManager.importFromCSV(fileName);
+                            break;
+                        case "JSON":
+                            stats = formatManager.importFromJSON(fileName);
+                            break;
+                        case "BINARY":
+                            stats = formatManager.importFromBinary(fileName);
+                            break;
+                    }
+                    
+                    if (stats != null) {
+                        System.out.println("\n" + "=".repeat(80));
+                        System.out.println("IMPORT SUMMARY");
+                        System.out.println("=".repeat(80));
+                        System.out.println("Format: " + format);
+                        System.out.println("File: " + stats.fileName);
+                        System.out.println("File Size: " + stats.fileSize + " bytes");
+                        System.out.println("Records Processed: " + stats.recordsProcessed);
+                        System.out.println("Successfully Imported: " + stats.successCount);
+                        System.out.println("Failed: " + stats.failureCount);
+                        System.out.println("Read Time: " + stats.readTime + " ms");
+                        System.out.println("=".repeat(80));
+                        System.out.println("Import completed!");
+                        
+                        long exec = System.currentTimeMillis() - start;
+                        try { 
+                            AuditLogger.getInstance().log("BULK_IMPORT_" + format, 
+                                "file=" + stats.fileName + ",total=" + stats.recordsProcessed + 
+                                ",success=" + stats.successCount + ",failed=" + stats.failureCount, 
+                                exec, true, ""); 
+                        } catch (Exception ex) { }
+                    }
+                    
+                    valid = true; // exit loop if successful
+                    
+                } catch (Exception e) {
+                    System.out.println("❌ Import Error: " + e.getMessage());
+                    System.out.println("Please try again.\n");
+                }
+
+            } catch (Exception e) {
+                System.out.println("Error during import: " + e.getMessage());
+                System.out.println("Please try again.\n");
+                scanner.nextLine(); // consume invalid input
+            }
+        }
+    }
+
+
+// ==================== BULK IMPORT STUDENTS ====================
+
+    private void bulkImportStudents() {
+        boolean valid = false;
+        while (!valid) {
+            try {
+                long start = System.currentTimeMillis();
+                System.out.println("------------ BULK IMPORT STUDENTS ----------------");
 
                 System.out.print("Enter file name (without extension): ");
                 String fileName = scanner.nextLine().trim();
@@ -732,111 +808,146 @@ public class Menu {
                     continue; // retry
                 }
 
-                System.out.println("\nProcessing grades ...\n");
+                System.out.println("\nProcessing students ...\n");
 
                 int totalRows = 0, successCount = 0, failedCount = 0;
                 ArrayList<String> failedRecords = new ArrayList<>();
 
                 try (BufferedReader br = new BufferedReader(new FileReader(file))) {
                     String line;
-                    int rowNum = 1;
+                    int rowNum = 0;
+                    boolean isHeader = true;
+                    
                     while ((line = br.readLine()) != null) {
+                        // Skip header row
+                        if (isHeader) {
+                            isHeader = false;
+                            continue;
+                        }
+                        
                         totalRows++;
                         String[] parts = line.split(",");
-                        if (parts.length != 4) {
-                            failedRecords.add("Row " + rowNum + ": Invalid column count");
+                        if (parts.length != 5) {
+                            failedRecords.add("Row " + (rowNum + 1) + ": Invalid column count (expected 5, got " + parts.length + ")");
                             failedCount++;
                             rowNum++;
                             continue;
                         }
 
-                        String studentIdStr = parts[0].trim();
-                        String subjectName = parts[1].trim();
-                        String subjectType = parts[2].trim();
-                        String gradeStr = parts[3].trim();
+                        String name = parts[0].trim();
+                        String ageStr = parts[1].trim();
+                        String email = parts[2].trim();
+                        String phone = parts[3].trim();
+                        String studentType = parts[4].trim();
 
-                        int studentId;
+                        // Validate name
+                        if (name.isEmpty() || name.length() > 100) {
+                            failedRecords.add("Row " + (rowNum + 1) + ": Invalid name → " + name);
+                            failedCount++;
+                            rowNum++;
+                            continue;
+                        }
+
+                        // Validate age
+                        int age;
                         try {
-                            studentId = Integer.parseInt(studentIdStr);
-                        } catch (Exception e) {
-                            failedRecords.add("Row " + rowNum + ": Invalid Student ID → " + studentIdStr);
-                            failedCount++;
-                            rowNum++;
-                            continue;
-                        }
-
-                        Student student = null;
-                        for (Student s : students) {
-                            if (s.id == studentId) {
-                                student = s;
-                                break;
+                            age = Integer.parseInt(ageStr);
+                            if (age < 5 || age > 100) {
+                                throw new NumberFormatException("Age out of range");
                             }
-                        }
-                        if (student == null) {
-                            failedRecords.add("Row " + rowNum + ": Student not found → " + studentId);
-                            failedCount++;
-                            rowNum++;
-                            continue;
-                        }
-
-                        Subject subject;
-                        if (subjectType.equalsIgnoreCase("Core")) {
-                            subject = new CoreSubject(subjectName, "C-" + subjectName.substring(0, 3).toUpperCase());
-                        } else if (subjectType.equalsIgnoreCase("Elective")) {
-                            subject = new ElectiveSubject(subjectName, "E-" + subjectName.substring(0, 3).toUpperCase());
-                        } else {
-                            failedRecords.add("Row " + rowNum + ": Invalid subject type → " + subjectType);
-                            failedCount++;
-                            rowNum++;
-                            continue;
-                        }
-
-                        double gradeValue;
-                        try {
-                            gradeValue = Double.parseDouble(gradeStr);
                         } catch (Exception e) {
-                            failedRecords.add("Row " + rowNum + ": Grade not numeric → " + gradeStr);
+                            failedRecords.add("Row " + (rowNum + 1) + ": Invalid age → " + ageStr);
                             failedCount++;
                             rowNum++;
                             continue;
                         }
 
-                        if (gradeValue < 0 || gradeValue > 100) {
-                            failedRecords.add("Row " + rowNum + ": Grade out of range → " + gradeValue);
+                        // Validate email
+                        if (!email.contains("@") || !email.contains(".")) {
+                            failedRecords.add("Row " + (rowNum + 1) + ": Invalid email format → " + email);
                             failedCount++;
                             rowNum++;
                             continue;
                         }
 
-                        Grade newGrade = new Grade(studentId, subject, gradeValue);
-                        gradeManager.addGrade(newGrade);
-                        successCount++;
+                        // Validate phone
+                        if (phone.length() < 10 || phone.length() > 20) {
+                            failedRecords.add("Row " + (rowNum + 1) + ": Invalid phone length → " + phone);
+                            failedCount++;
+                            rowNum++;
+                            continue;
+                        }
+
+                        // Validate and parse student type
+                        int type;
+                        if (studentType.equalsIgnoreCase("Regular Student") || studentType.equalsIgnoreCase("1")) {
+                            type = 1;
+                        } else if (studentType.equalsIgnoreCase("Honors Student") || studentType.equalsIgnoreCase("2")) {
+                            type = 2;
+                        } else {
+                            failedRecords.add("Row " + (rowNum + 1) + ": Invalid student type → " + studentType + " (use 'Regular Student' or 'Honors Student')");
+                            failedCount++;
+                            rowNum++;
+                            continue;
+                        }
+
+                        try {
+                            int id = context.generateStudentId();
+                            Student newStudent = StudentFactory.createStudent(type, id, name, age, email, phone);
+                            students.add(newStudent); // O(1) append
+                            context.getStudentIndex().put(String.valueOf(newStudent.getId()), newStudent); // O(1) average
+                            
+                            // Cache newly added student
+                            try {
+                                CacheManager.getInstance().put("student:" + newStudent.getId(), newStudent);
+                            } catch (Exception ex) {
+                                // ignore cache errors
+                            }
+                            
+                            successCount++;
+                        } catch (InvalidStudentDataException e) {
+                            failedRecords.add("Row " + (rowNum + 1) + ": " + e.getMessage());
+                            failedCount++;
+                        }
+                        
                         rowNum++;
                     }
                 }
 
-                System.out.println("---------------- IMPORT SUMMARY ----------------");
+                System.out.println("------------- IMPORT SUMMARY ----------------");
                 System.out.println("Total Rows: " + totalRows);
                 System.out.println("Successfully Imported: " + successCount);
                 System.out.println("Failed: " + failedCount);
 
                 if (!failedRecords.isEmpty()) {
                     System.out.println("\nFAILED RECORDS:");
-                    for (String error : failedRecords) {
-                        System.out.println(error);
+                    failedRecords.stream()
+                        .limit(20) // Show first 20 errors
+                        .forEach(System.out::println);
+                    if (failedRecords.size() > 20) {
+                        System.out.println("... and " + (failedRecords.size() - 20) + " more errors");
                     }
                 }
 
-                System.out.println("------------------------------------------------");
+                System.out.println("---------------------------------------------");
                 System.out.println("Import completed!");
+                System.out.println("Total Students in System: " + students.size());
+                
                 long exec = System.currentTimeMillis() - start;
-                try { AuditLogger.getInstance().log("BULK_IMPORT", "file=" + filePath + ",total=" + totalRows + ",success=" + successCount + ",failed=" + failedCount, exec, true, ""); } catch (Exception ex) { }
+                try { 
+                    AuditLogger.getInstance().log("BULK_IMPORT_STUDENTS", 
+                        "file=" + filePath + ",total=" + totalRows + ",success=" + successCount + ",failed=" + failedCount, 
+                        exec, true, ""); 
+                } catch (Exception ex) { }
+                
                 valid = true; // exit loop if successful
 
             } catch (Exception e) {
                 System.out.println("Error during import: " + e.getMessage());
+                e.printStackTrace();
                 System.out.println("Please try again.\n");
-                scanner.nextLine(); // consume invalid input
+                try { scanner.nextLine(); } catch (Exception ex) { } // consume invalid input
+                try { AuditLogger.getInstance().log("BULK_IMPORT_STUDENTS", "exception", 0, false, e.getMessage()); } catch (Exception ex) { }
             }
         }
     }
@@ -844,7 +955,7 @@ public class Menu {
 
 // ==================== SEARCH STUDENTS (Option 9) ====================
 
-    public static void searchStudents() {
+    private void searchStudents() {
         System.out.println("============================================");
         System.out.println("||         SEARCH STUDENTS               ||");
         System.out.println("============================================");
@@ -911,7 +1022,7 @@ public class Menu {
         }
     }
 
-    private static void regexSearchByEmailDomain(RegexSearchEngine engine) {
+    private void regexSearchByEmailDomain(RegexSearchEngine engine) {
         System.out.println("\n========== REGEX SEARCH: EMAIL DOMAIN ==========");
         System.out.println("Examples: gmail\\.com, .*@.*\\.edu, yahoo.*");
         System.out.print("Enter email domain pattern: ");
@@ -928,7 +1039,7 @@ public class Menu {
         }
     }
 
-    private static void regexSearchByIdPattern(RegexSearchEngine engine) {
+    private void regexSearchByIdPattern(RegexSearchEngine engine) {
         System.out.println("\n========== REGEX SEARCH: STUDENT ID PATTERN ==========");
         System.out.println("Examples: 10.*, 1[0-2].*, ^101[0-5]$");
         System.out.print("Enter student ID pattern: ");
@@ -945,7 +1056,7 @@ public class Menu {
         }
     }
 
-    private static void regexSearchByNamePattern(RegexSearchEngine engine) {
+    private void regexSearchByNamePattern(RegexSearchEngine engine) {
         System.out.println("\n========== REGEX SEARCH: NAME PATTERN ==========");
         System.out.println("Examples: ^A.*, .*Smith$, ^[A-M].*");
         System.out.print("Enter name pattern: ");
@@ -962,7 +1073,7 @@ public class Menu {
         }
     }
 
-    private static void regexCustomPatternSearch(RegexSearchEngine engine) {
+    private void regexCustomPatternSearch(RegexSearchEngine engine) {
         System.out.println("\n========== CUSTOM REGEX PATTERN SEARCH ==========");
         System.out.println("Available fields: name, email, phone, type, status, id");
         System.out.print("Enter field name: ");
@@ -982,7 +1093,7 @@ public class Menu {
         }
     }
 
-    private static void handleBulkOperations(RegexSearchEngine engine) {
+    private void handleBulkOperations(RegexSearchEngine engine) {
         boolean bulkOperating = true;
         while (bulkOperating) {
             engine.displayBulkOperationsMenu();
@@ -997,7 +1108,7 @@ public class Menu {
         }
     }
 
-    private static ArrayList<Student> searchByStudentId() {
+    private ArrayList<Student> searchByStudentId() {
         ArrayList<Student> results = new ArrayList<>();
 
         System.out.print("Enter Student ID: ");
@@ -1014,7 +1125,7 @@ public class Menu {
         return results;
     }
 
-    private static ArrayList<Student> searchByName() {
+    private ArrayList<Student> searchByName() {
         ArrayList<Student> results = new ArrayList<>();
 
         System.out.print("Enter student name (or part of name): ");
@@ -1034,7 +1145,7 @@ public class Menu {
         return results;
     }
 
-    private static ArrayList<Student> searchByGradeRange() {
+    private ArrayList<Student> searchByGradeRange() {
         ArrayList<Student> results = new ArrayList<>();
 
         System.out.print("Enter minimum grade (0-100): ");
@@ -1064,7 +1175,7 @@ public class Menu {
         return results;
     }
 
-    private static ArrayList<Student> searchByStudentType() {
+    private ArrayList<Student> searchByStudentType() {
         ArrayList<Student> results = new ArrayList<>();
 
         System.out.println("Select Student Type:");
@@ -1094,7 +1205,7 @@ public class Menu {
         return results;
     }
 
-    private static void displaySearchResults(ArrayList<Student> results) {
+    private void displaySearchResults(ArrayList<Student> results) {
         if (results.isEmpty()) {
             System.out.println("\n❌ No students found matching your search criteria.\n");
             return;
@@ -1136,7 +1247,7 @@ public class Menu {
     /**
      * Advanced multi-format import with file watching
      */
-    public static void advancedImportGrades() {
+    private void advancedImportGrades() {
         FileFormatManager formatManager = new FileFormatManager();
         
         System.out.println("\n" + "=".repeat(70));
@@ -1183,7 +1294,7 @@ public class Menu {
     /**
      * Advanced multi-format export with comparison
      */
-    public static void advancedExportGrades() {
+    private void advancedExportGrades() {
         if (gradeManager.getGradeCount() == 0) {
             System.out.println("No grades to export.");
             return;
@@ -1244,7 +1355,7 @@ public class Menu {
         }
     }
 
-    private static void importMultiFormat(FileFormatManager formatManager, String format) {
+    private void importMultiFormat(FileFormatManager formatManager, String format) {
         System.out.print("\nEnter file name (without extension): ");
         String fileName = scanner.nextLine().trim();
 
@@ -1276,7 +1387,7 @@ public class Menu {
         }
     }
 
-    private static void watchDirectoryForNewFiles(FileFormatManager formatManager) {
+    private void watchDirectoryForNewFiles(FileFormatManager formatManager) {
         System.out.println("Select format to watch:");
         System.out.println("1. CSV");
         System.out.println("2. JSON");
@@ -1304,7 +1415,7 @@ public class Menu {
         formatManager.watchDirectoryForImports(format, seconds);
     }
 
-    private static void listFilesByFormat(FileFormatManager formatManager) {
+    private void listFilesByFormat(FileFormatManager formatManager) {
         System.out.println("Select format to list:");
         System.out.println("1. CSV");
         System.out.println("2. JSON");
@@ -1331,7 +1442,7 @@ public class Menu {
     /**
      * Launch the real-time statistics dashboard
      */
-    public static void launchStatisticsDashboard() {
+    private void launchStatisticsDashboard() {
         System.out.println("\n" + "=".repeat(70));
         System.out.println("REAL-TIME STATISTICS DASHBOARD");
         System.out.println("=".repeat(70));
@@ -1352,7 +1463,7 @@ public class Menu {
     /**
      * Launch concurrent batch report generation
      */
-    public static void concurrentBatchReportGeneration() {
+    private void concurrentBatchReportGeneration() {
         if (students.isEmpty()) {
             System.out.println("❌ No students to generate reports for.");
             return;
@@ -1412,7 +1523,7 @@ public class Menu {
     /**
      * Open scheduled tasks management menu
      */
-    public static void openScheduledTasksMenu() {
+    private void openScheduledTasksMenu() {
         boolean running = true;
         
         while (running) {
@@ -1420,7 +1531,7 @@ public class Menu {
             System.out.println("⏰ SCHEDULED AUTOMATED TASKS");
             System.out.println("═".repeat(70));
             
-            List<ScheduledTask> tasks = taskScheduler.getActiveTasks();
+            List<ScheduledTask> tasks = context.getTaskScheduler().getActiveTasks();
             
             if (tasks.isEmpty()) {
                 System.out.println("No scheduled tasks configured.");
@@ -1430,7 +1541,7 @@ public class Menu {
                     ScheduledTask task = tasks.get(i);
                     System.out.printf("\n[%d] %s\n", i + 1, task.description);
                     System.out.println("    Status: " + (task.enabled ? "✓ Enabled" : "✗ Disabled"));
-                    System.out.println("    " + taskScheduler.getTaskStatus(task));
+                    System.out.println("    " + context.getTaskScheduler().getTaskStatus(task));
                 }
             }
             
@@ -1482,7 +1593,7 @@ public class Menu {
     /**
      * View details of a scheduled task
      */
-    private static void viewTaskDetails(List<ScheduledTask> tasks) {
+    private void viewTaskDetails(List<ScheduledTask> tasks) {
         if (tasks.isEmpty()) {
             System.out.println("No tasks available.");
             return;
@@ -1518,7 +1629,7 @@ public class Menu {
                 System.out.println("Last Execution: " + task.lastExecutionTime);
                 System.out.println("Last Duration: " + task.lastExecutionDurationMs + "ms");
             }
-            System.out.println("\n" + taskScheduler.getTaskStatus(task));
+            System.out.println("\n" + context.getTaskScheduler().getTaskStatus(task));
             System.out.println("\nPress Enter to continue...");
             scanner.nextLine();
         }
@@ -1527,7 +1638,7 @@ public class Menu {
     /**
      * Toggle task enabled/disabled status
      */
-    private static void toggleTaskStatus(List<ScheduledTask> tasks) {
+    private void toggleTaskStatus(List<ScheduledTask> tasks) {
         if (tasks.isEmpty()) {
             System.out.println("No tasks available.");
             return;
@@ -1552,9 +1663,9 @@ public class Menu {
         if (choice >= 0 && choice < tasks.size()) {
             ScheduledTask task = tasks.get(choice);
             if (task.enabled) {
-                taskScheduler.disableTask(task.taskId);
+                context.getTaskScheduler().disableTask(task.taskId);
             } else {
-                taskScheduler.enableTask(task.taskId);
+                context.getTaskScheduler().enableTask(task.taskId);
             }
         }
     }
@@ -1562,7 +1673,7 @@ public class Menu {
     /**
      * View task execution logs
      */
-    private static void viewTaskLogs(List<ScheduledTask> tasks) {
+    private void viewTaskLogs(List<ScheduledTask> tasks) {
         if (tasks.isEmpty()) {
             System.out.println("No tasks available.");
             return;
@@ -1600,7 +1711,7 @@ public class Menu {
     /**
      * Run a task manually
      */
-    private static void runTaskManually(List<ScheduledTask> tasks) {
+    private void runTaskManually(List<ScheduledTask> tasks) {
         if (tasks.isEmpty()) {
             System.out.println("No tasks available.");
             return;
@@ -1630,7 +1741,7 @@ public class Menu {
         }
     }
 
-    private static void advancedPatternSearch() {
+    private void advancedPatternSearch() {
         RegexSearchEngine searchEngine = new RegexSearchEngine();
         boolean searching = true;
 
@@ -1680,7 +1791,7 @@ public class Menu {
         }
     }
 
-    private static void searchByEmailDomain(RegexSearchEngine searchEngine) {
+    private void searchByEmailDomain(RegexSearchEngine searchEngine) {
         System.out.println("\n" + "-".repeat(60));
         System.out.println("Search by Email Domain Pattern");
         System.out.println("-".repeat(60));
@@ -1693,7 +1804,7 @@ public class Menu {
         displaySearchResults(results, searchEngine, "Email Domain");
     }
 
-    private static void searchByPhoneAreaCode(RegexSearchEngine searchEngine) {
+    private void searchByPhoneAreaCode(RegexSearchEngine searchEngine) {
         System.out.println("\n" + "-".repeat(60));
         System.out.println("Search by Phone Area Code Pattern");
         System.out.println("-".repeat(60));
@@ -1706,7 +1817,7 @@ public class Menu {
         displaySearchResults(results, searchEngine, "Phone Area Code");
     }
 
-    private static void searchByStudentIdPattern(RegexSearchEngine searchEngine) {
+    private void searchByStudentIdPattern(RegexSearchEngine searchEngine) {
         System.out.println("\n" + "-".repeat(60));
         System.out.println("Search by Student ID Pattern (with wildcards)");
         System.out.println("-".repeat(60));
@@ -1723,7 +1834,7 @@ public class Menu {
         displaySearchResults(results, searchEngine, "Student ID");
     }
 
-    private static void searchByNamePattern(RegexSearchEngine searchEngine) {
+    private void searchByNamePattern(RegexSearchEngine searchEngine) {
         System.out.println("\n" + "-".repeat(60));
         System.out.println("Search by Name Pattern (Regex)");
         System.out.println("-".repeat(60));
@@ -1740,7 +1851,7 @@ public class Menu {
         displaySearchResults(results, searchEngine, "Student Name");
     }
 
-    private static void customPatternSearch(RegexSearchEngine searchEngine) {
+    private void customPatternSearch(RegexSearchEngine searchEngine) {
         System.out.println("\n" + "-".repeat(60));
         System.out.println("Custom Regex Pattern Search");
         System.out.println("-".repeat(60));
@@ -1787,7 +1898,7 @@ public class Menu {
         }
     }
 
-    private static void displaySearchResults(ArrayList<RegexSearchEngine.SearchResult> results, 
+    private void displaySearchResults(ArrayList<RegexSearchEngine.SearchResult> results, 
                                               RegexSearchEngine searchEngine, String searchType) {
         if (results.isEmpty()) {
             System.out.println("No matches found.");
@@ -1847,7 +1958,7 @@ public class Menu {
         }
     }
 
-    private static void openCacheMenu() {
+    private void openCacheMenu() {
         // Audit menu placed above cache menu in source; openAuditMenu is defined below
         CacheManager cache = CacheManager.getInstance();
         boolean inCacheMenu = true;
@@ -1895,7 +2006,7 @@ public class Menu {
         }
     }
 
-    private static void openAuditMenu() {
+    private void openAuditMenu() {
         AuditLogger logger = AuditLogger.getInstance();
         boolean inAudit = true;
         while (inAudit) {
@@ -1972,7 +2083,7 @@ public class Menu {
      * Demonstrates filtering, mapping, reducing, grouping, partitioning,
      * sequential vs parallel streams and Files.lines() processing.
      */
-    private static void openStreamProcessingMenu() {
+    private void openStreamProcessingMenu() {
         boolean inStreams = true;
         while (inStreams) {
             System.out.println("\n" + "=".repeat(70));
@@ -2015,7 +2126,7 @@ public class Menu {
 
     // 1. Find all honors students with GPA > 3.5 using filter, map, sorted, collect,
     //    plus examples of findFirst, findAny, anyMatch, noneMatch
-    private static void streamHonorsStudents() {
+    private void streamHonorsStudents() {
         if (students.isEmpty()) {
             System.out.println("No students in system.");
             return;
@@ -2060,7 +2171,7 @@ public class Menu {
     }
 
     // 2. Group students by GPA range using groupingBy and collect
-    private static void streamGroupStudentsByGpaRange() {
+    private void streamGroupStudentsByGpaRange() {
         if (students.isEmpty()) {
             System.out.println("No students in system.");
             return;
@@ -2068,7 +2179,7 @@ public class Menu {
 
         long start = System.nanoTime();
         Map<String, List<Student>> byRange = students.stream()
-                .collect(Collectors.groupingBy(Menu::gpaRangeLabel));
+                .collect(Collectors.groupingBy(this::gpaRangeLabel));
         long durationMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
 
         System.out.println("\nStudents grouped by GPA range:");
@@ -2078,7 +2189,7 @@ public class Menu {
         System.out.println("Execution time: " + durationMs + " ms");
     }
 
-    private static String gpaRangeLabel(Student s) {
+    private String gpaRangeLabel(Student s) {
         double gpa = s.computeGPA();
         if (gpa >= 3.5) return "Honors (>=3.5)";
         if (gpa >= 3.0) return "Strong (3.0 - 3.49)";
@@ -2088,7 +2199,7 @@ public class Menu {
     }
 
     // 3. Average grade per subject using streams over GradeManager
-    private static void streamAverageGradePerSubject() {
+    private void streamAverageGradePerSubject() {
         if (gradeManager.getGradeCount() == 0) {
             System.out.println("No grades recorded.");
             return;
@@ -2110,7 +2221,7 @@ public class Menu {
     }
 
     // 4. Extract unique course codes
-    private static void streamUniqueCourseCodes() {
+    private void streamUniqueCourseCodes() {
         if (gradeManager.getGradeCount() == 0) {
             System.out.println("No grades recorded.");
             return;
@@ -2130,7 +2241,7 @@ public class Menu {
     }
 
     // 5. Find top 5 students by average grade (chained: filter -> map/sort -> limit -> collect)
-    private static void streamTop5ByAverageGrade() {
+    private void streamTop5ByAverageGrade() {
         if (students.isEmpty()) {
             System.out.println("No students in system.");
             return;
@@ -2154,7 +2265,7 @@ public class Menu {
     }
 
     // 6. Partition students by honors eligibility using partitioningBy
-    private static void streamPartitionHonorsEligibility() {
+    private void streamPartitionHonorsEligibility() {
         if (students.isEmpty()) {
             System.out.println("No students in system.");
             return;
@@ -2172,7 +2283,7 @@ public class Menu {
     }
 
     // 7. Process a large CSV file using Files.lines() stream
-    private static void streamProcessLargeCsv() {
+    private void streamProcessLargeCsv() {
         System.out.print("Enter CSV file name in ./imports (without extension): ");
         String fileName = scanner.nextLine().trim();
         Path path = Path.of("./imports/" + fileName + ".csv");
@@ -2213,7 +2324,7 @@ public class Menu {
     }
 
     // 8. Compare sequential vs parallel stream processing on in-memory data
-    private static void streamSequentialVsParallelComparison() {
+    private void streamSequentialVsParallelComparison() {
         if (students.isEmpty()) {
             System.out.println("No students in system.");
             return;

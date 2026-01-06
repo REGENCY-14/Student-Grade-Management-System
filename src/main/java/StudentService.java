@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 public class StudentService {
 
@@ -44,12 +45,45 @@ public class StudentService {
         return students;
     }
 
-    // ------------------ Find Student by ID ------------------
+    // ------------------ Find Student by ID (Stream-based) ------------------
     public Student findStudentById(int id) {
-        for (Student student : students) {
-            if (student.getId() == id) return student;
-        }
-        return null;
+        return students.stream()
+                .filter(student -> student.getId() == id)
+                .findFirst()
+                .orElse(null);
+    }
+
+    // Get all students matching a filter condition (Stream-based)
+    public ArrayList<Student> getStudentsByFilter(java.util.function.Predicate<Student> filter) {
+        return students.stream()
+                .filter(filter)
+                .collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    // Get all students of a specific type (Stream-based)
+    public ArrayList<Student> getStudentsByType(String type) {
+        return students.stream()
+                .filter(s -> s.getType().equals(type))
+                .collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    // Get all active/valid students (Stream-based)
+    public ArrayList<Student> getValidStudents() {
+        return students.stream()
+                .filter(s -> isValidStudent(s))
+                .collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    // Validate entire student list (Stream-based)
+    private boolean isValidStudent(Student s) {
+        return s != null && isValidAge(s.getAge()) && isValidEmail(s.getEmail()) && isValidPhone(s.getPhone());
+    }
+
+    // Count students with condition (Stream-based)
+    public long countStudentsByType(String type) {
+        return students.stream()
+                .filter(s -> s.getType().equals(type))
+                .count();
     }
 
     // ------------------ Validators ------------------

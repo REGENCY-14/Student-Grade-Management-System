@@ -547,7 +547,7 @@ public class FileFormatManager {
                 new ElectiveSubject(subjectName, "E-" + subjectName.substring(0, Math.min(3, subjectName.length())).toUpperCase());
 
         Grade newGrade = new Grade(studentId, subject, grade);
-        Menu.gradeManager.addGrade(newGrade);
+        ApplicationContext.getInstance().getGradeManager().addGrade(newGrade);
     }
 
     private void processJSONGrade(Map<String, Object> gradeMap) throws Exception {
@@ -570,7 +570,7 @@ public class FileFormatManager {
                 new ElectiveSubject(subjectName, "E-" + subjectName.substring(0, Math.min(3, subjectName.length())).toUpperCase());
 
         Grade newGrade = new Grade(studentId, subject, grade);
-        Menu.gradeManager.addGrade(newGrade);
+        ApplicationContext.getInstance().getGradeManager().addGrade(newGrade);
     }
 
     private void processBinaryGrade(GradeData gradeData) throws Exception {
@@ -584,15 +584,15 @@ public class FileFormatManager {
                 new ElectiveSubject(gradeData.subjectName, "E-" + gradeData.subjectName.substring(0, Math.min(3, gradeData.subjectName.length())).toUpperCase());
 
         Grade newGrade = new Grade(gradeData.studentId, subject, gradeData.grade);
-        Menu.gradeManager.addGrade(newGrade);
+        ApplicationContext.getInstance().getGradeManager().addGrade(newGrade);
     }
 
     /**
      * Optimized student lookup.
-     * Big-O: O(1) average using HashMap-backed index (Menu.studentIndex).
+     * Big-O: O(1) average using HashMap-backed index (ApplicationContext.getInstance().getStudentIndex()).
      */
     private Student findStudentById(int studentId) {
-        return Menu.studentIndex.get(String.valueOf(studentId));
+        return ApplicationContext.getInstance().getStudentIndex().get(String.valueOf(studentId));
     }
 
     private String formatBytes(long bytes) {
@@ -619,3 +619,4 @@ public class FileFormatManager {
         }
     }
 }
+

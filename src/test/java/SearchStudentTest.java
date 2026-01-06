@@ -2,7 +2,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.AfterEach;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -23,8 +22,10 @@ class SearchStudentTest {
     void setUp() throws Exception {
         // Setup test data
         gradeManager = new GradeManager();
-        Menu.gradeManager = gradeManager;
-        Menu.students = new ArrayList<>();
+        
+        // Initialize ApplicationContext with test data
+        ArrayList<Student> students = ApplicationContext.getInstance().getStudents();
+        students.clear();
 
         // Create test students
         student1 = new RegularStudent(1001, "John Doe", 18, "john@email.com", "1234567890");
@@ -32,10 +33,10 @@ class SearchStudentTest {
         student3 = new HonorsStudent(1003, "Alice Johnson", 20, "alice@email.com", "1112223333");
         student4 = new HonorsStudent(1004, "Bob Williams", 18, "bob@email.com", "4445556666");
 
-        Menu.students.add(student1);
-        Menu.students.add(student2);
-        Menu.students.add(student3);
-        Menu.students.add(student4);
+        students.add(student1);
+        students.add(student2);
+        students.add(student3);
+        students.add(student4);
 
         // Add some grades
         CoreSubject math = new CoreSubject("Mathematics", "C-MATH");
@@ -69,7 +70,7 @@ class SearchStudentTest {
     @DisplayName("Should find student by exact ID")
     void testSearchByStudentId_Found() {
         ArrayList<Student> results = new ArrayList<>();
-        for (Student s : Menu.students) {
+        for (Student s : ApplicationContext.getInstance().getStudents()) {
             if (s.id == 1001) {
                 results.add(s);
                 break;
@@ -85,7 +86,7 @@ class SearchStudentTest {
     @DisplayName("Should return empty list when ID not found")
     void testSearchByStudentId_NotFound() {
         ArrayList<Student> results = new ArrayList<>();
-        for (Student s : Menu.students) {
+        for (Student s : ApplicationContext.getInstance().getStudents()) {
             if (s.id == 9999) {
                 results.add(s);
                 break;
@@ -102,7 +103,7 @@ class SearchStudentTest {
         ArrayList<Student> results = new ArrayList<>();
 
         for (int searchId : searchIds) {
-            for (Student s : Menu.students) {
+            for (Student s : ApplicationContext.getInstance().getStudents()) {
                 if (s.id == searchId) {
                     results.add(s);
                     break;
@@ -121,7 +122,7 @@ class SearchStudentTest {
         String searchName = "john doe";
         ArrayList<Student> results = new ArrayList<>();
 
-        for (Student s : Menu.students) {
+        for (Student s : ApplicationContext.getInstance().getStudents()) {
             if (s.name.toLowerCase().contains(searchName)) {
                 results.add(s);
             }
@@ -137,7 +138,7 @@ class SearchStudentTest {
         String searchName = "john";
         ArrayList<Student> results = new ArrayList<>();
 
-        for (Student s : Menu.students) {
+        for (Student s : ApplicationContext.getInstance().getStudents()) {
             if (s.name.toLowerCase().contains(searchName.toLowerCase())) {
                 results.add(s);
             }
@@ -154,7 +155,7 @@ class SearchStudentTest {
         String searchName = "smith";
         ArrayList<Student> results = new ArrayList<>();
 
-        for (Student s : Menu.students) {
+        for (Student s : ApplicationContext.getInstance().getStudents()) {
             if (s.name.toLowerCase().contains(searchName.toLowerCase())) {
                 results.add(s);
             }
@@ -171,7 +172,7 @@ class SearchStudentTest {
 
         for (String term : searchTerms) {
             ArrayList<Student> results = new ArrayList<>();
-            for (Student s : Menu.students) {
+            for (Student s : ApplicationContext.getInstance().getStudents()) {
                 if (s.name.toLowerCase().contains(term.toLowerCase())) {
                     results.add(s);
                 }
@@ -186,7 +187,7 @@ class SearchStudentTest {
         String searchName = "xyz";
         ArrayList<Student> results = new ArrayList<>();
 
-        for (Student s : Menu.students) {
+        for (Student s : ApplicationContext.getInstance().getStudents()) {
             if (s.name.toLowerCase().contains(searchName.toLowerCase())) {
                 results.add(s);
             }
@@ -201,7 +202,7 @@ class SearchStudentTest {
         String searchName = "j";
         ArrayList<Student> results = new ArrayList<>();
 
-        for (Student s : Menu.students) {
+        for (Student s : ApplicationContext.getInstance().getStudents()) {
             if (s.name.toLowerCase().contains(searchName.toLowerCase())) {
                 results.add(s);
             }
@@ -219,7 +220,7 @@ class SearchStudentTest {
         double maxGrade = 95.0;
         ArrayList<Student> results = new ArrayList<>();
 
-        for (Student s : Menu.students) {
+        for (Student s : ApplicationContext.getInstance().getStudents()) {
             double avgGrade = s.getAverageGrade();
             if (avgGrade >= minGrade && avgGrade <= maxGrade && avgGrade > 0) {
                 results.add(s);
@@ -236,7 +237,7 @@ class SearchStudentTest {
         double maxGrade = 87.5;
         ArrayList<Student> results = new ArrayList<>();
 
-        for (Student s : Menu.students) {
+        for (Student s : ApplicationContext.getInstance().getStudents()) {
             double avgGrade = s.getAverageGrade();
             if (avgGrade >= minGrade && avgGrade <= maxGrade && avgGrade > 0) {
                 results.add(s);
@@ -251,13 +252,13 @@ class SearchStudentTest {
     @DisplayName("Should exclude students with no grades")
     void testSearchByGradeRange_ExcludeNoGrades() {
         RegularStudent studentNoGrades = new RegularStudent(1005, "Test Student", 18, "test@email.com", "1234567890");
-        Menu.students.add(studentNoGrades);
+        ApplicationContext.getInstance().getStudents().add(studentNoGrades);
 
         double minGrade = 0.0;
         double maxGrade = 100.0;
         ArrayList<Student> results = new ArrayList<>();
 
-        for (Student s : Menu.students) {
+        for (Student s : ApplicationContext.getInstance().getStudents()) {
             double avgGrade = s.getAverageGrade();
             if (avgGrade >= minGrade && avgGrade <= maxGrade && avgGrade > 0) {
                 results.add(s);
@@ -274,7 +275,7 @@ class SearchStudentTest {
         double maxGrade = 100.0;
         ArrayList<Student> results = new ArrayList<>();
 
-        for (Student s : Menu.students) {
+        for (Student s : ApplicationContext.getInstance().getStudents()) {
             double avgGrade = s.getAverageGrade();
             if (avgGrade >= minGrade && avgGrade <= maxGrade && avgGrade > 0) {
                 results.add(s);
@@ -291,7 +292,7 @@ class SearchStudentTest {
         double maxGrade = 60.0;
         ArrayList<Student> results = new ArrayList<>();
 
-        for (Student s : Menu.students) {
+        for (Student s : ApplicationContext.getInstance().getStudents()) {
             double avgGrade = s.getAverageGrade();
             if (avgGrade >= minGrade && avgGrade <= maxGrade && avgGrade > 0) {
                 results.add(s);
@@ -309,7 +310,7 @@ class SearchStudentTest {
         double maxGrade = 100.0;
         ArrayList<Student> results = new ArrayList<>();
 
-        for (Student s : Menu.students) {
+        for (Student s : ApplicationContext.getInstance().getStudents()) {
             double avgGrade = s.getAverageGrade();
             if (avgGrade >= minGrade && avgGrade <= maxGrade) {
                 results.add(s);
@@ -327,7 +328,7 @@ class SearchStudentTest {
         String targetType = "Regular";
         ArrayList<Student> results = new ArrayList<>();
 
-        for (Student s : Menu.students) {
+        for (Student s : ApplicationContext.getInstance().getStudents()) {
             if (s.getType().equals(targetType)) {
                 results.add(s);
             }
@@ -343,7 +344,7 @@ class SearchStudentTest {
         String targetType = "Honors";
         ArrayList<Student> results = new ArrayList<>();
 
-        for (Student s : Menu.students) {
+        for (Student s : ApplicationContext.getInstance().getStudents()) {
             if (s.getType().equals(targetType)) {
                 results.add(s);
             }
@@ -359,7 +360,7 @@ class SearchStudentTest {
         ArrayList<Student> regularResults = new ArrayList<>();
         ArrayList<Student> honorsResults = new ArrayList<>();
 
-        for (Student s : Menu.students) {
+        for (Student s : ApplicationContext.getInstance().getStudents()) {
             if (s.getType().equals("Regular")) {
                 regularResults.add(s);
             } else if (s.getType().equals("Honors")) {
@@ -385,7 +386,7 @@ class SearchStudentTest {
         String targetType = "Regular";
         ArrayList<Student> results = new ArrayList<>();
 
-        for (Student s : Menu.students) {
+        for (Student s : ApplicationContext.getInstance().getStudents()) {
             if (s.name.toLowerCase().contains(searchName.toLowerCase())
                     && s.getType().equals(targetType)) {
                 results.add(s);
@@ -405,7 +406,7 @@ class SearchStudentTest {
         String targetType = "Honors";
         ArrayList<Student> results = new ArrayList<>();
 
-        for (Student s : Menu.students) {
+        for (Student s : ApplicationContext.getInstance().getStudents()) {
             double avgGrade = s.getAverageGrade();
             if (avgGrade >= minGrade && avgGrade <= maxGrade
                     && avgGrade > 0 && s.getType().equals(targetType)) {
@@ -422,10 +423,10 @@ class SearchStudentTest {
     @Test
     @DisplayName("Should handle empty student list")
     void testSearchWithEmptyList() {
-        Menu.students.clear();
+        ApplicationContext.getInstance().getStudents().clear();
 
         ArrayList<Student> results = new ArrayList<>();
-        for (Student s : Menu.students) {
+        for (Student s : ApplicationContext.getInstance().getStudents()) {
             if (s.id == 1001) {
                 results.add(s);
             }
@@ -438,12 +439,12 @@ class SearchStudentTest {
     @DisplayName("Should handle search with special characters in name")
     void testSearchByName_SpecialCharacters() {
         RegularStudent specialStudent = new RegularStudent(1005, "O'Brien-Smith", 18, "test@email.com", "1234567890");
-        Menu.students.add(specialStudent);
+        ApplicationContext.getInstance().getStudents().add(specialStudent);
 
         String searchName = "o'brien";
         ArrayList<Student> results = new ArrayList<>();
 
-        for (Student s : Menu.students) {
+        for (Student s : ApplicationContext.getInstance().getStudents()) {
             if (s.name.toLowerCase().contains(searchName.toLowerCase())) {
                 results.add(s);
             }
@@ -457,12 +458,12 @@ class SearchStudentTest {
     @DisplayName("Should handle students with identical names")
     void testSearchByName_DuplicateNames() {
         RegularStudent duplicate = new RegularStudent(1005, "John Doe", 20, "john2@email.com", "9998887777");
-        Menu.students.add(duplicate);
+        ApplicationContext.getInstance().getStudents().add(duplicate);
 
         String searchName = "john doe";
         ArrayList<Student> results = new ArrayList<>();
 
-        for (Student s : Menu.students) {
+        for (Student s : ApplicationContext.getInstance().getStudents()) {
             if (s.name.toLowerCase().contains(searchName.toLowerCase())) {
                 results.add(s);
             }
@@ -479,7 +480,7 @@ class SearchStudentTest {
         double maxGrade = 0.0;
         ArrayList<Student> results = new ArrayList<>();
 
-        for (Student s : Menu.students) {
+        for (Student s : ApplicationContext.getInstance().getStudents()) {
             double avgGrade = s.getAverageGrade();
             if (avgGrade >= minGrade && avgGrade <= maxGrade && avgGrade > 0) {
                 results.add(s);
@@ -493,7 +494,7 @@ class SearchStudentTest {
     @DisplayName("Should verify search results have correct data")
     void testSearchResults_DataIntegrity() {
         ArrayList<Student> results = new ArrayList<>();
-        for (Student s : Menu.students) {
+        for (Student s : ApplicationContext.getInstance().getStudents()) {
             if (s.id == 1001) {
                 results.add(s);
                 break;

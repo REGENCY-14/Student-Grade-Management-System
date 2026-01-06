@@ -1,0 +1,54 @@
+package services;
+
+/**
+ * Dependency Inversion Principle (DIP): Interface for student data access
+ * Separates student storage from business logic
+ * Single Responsibility Principle (SRP): Only handles student retrieval and storage
+ * Allows different storage implementations
+ */
+public interface IStudentRepository {
+    /**
+     * Add a student to the repository
+     * @param student student to add
+     * @return true if successful, false otherwise
+     */
+    boolean addStudent(Student student);
+
+    /**
+     * Get all students
+     * @return list of all students
+     */
+    java.util.List<Student> getAllStudents();
+
+    /**
+     * Get student by ID
+     * @param studentId student ID
+     * @return student object or null if not found
+     */
+    Student getStudentById(int studentId);
+
+    /**
+     * Remove a student
+     * @param studentId student ID to remove
+     * @return true if successful, false otherwise
+     */
+    boolean removeStudent(int studentId);
+
+    /**
+     * Get total count of students
+     * @return count
+     */
+    int getStudentCount();
+
+    /**
+     * Clear all students
+     */
+    void clearAllStudents();
+
+    /**
+     * Find students matching a predicate
+     * @param filter filter predicate
+     * @return list of matching students
+     */
+    java.util.List<Student> findByFilter(java.util.function.Predicate<Student> filter);
+}

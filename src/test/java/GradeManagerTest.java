@@ -1,13 +1,9 @@
 import exception.StudentNotFoundException;
-import exception.GradeStorageFullException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import java.util.ArrayList;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 @DisplayName("GradeManager Class Tests")
 class GradeManagerTest {
@@ -20,16 +16,18 @@ class GradeManagerTest {
 
     @BeforeEach
     void setUp() {
+        // Create test data
         gradeManager = new GradeManager();
         student1 = new RegularStudent(1001, "John Doe", 18, "john@email.com", "1234567890");
         student2 = new HonorsStudent(1002, "Jane Smith", 19, "jane@email.com", "0987654321");
         mathSubject = new CoreSubject("Mathematics", "C-MATH");
         musicSubject = new ElectiveSubject("Music", "E-MUS");
 
-        Menu.students = new ArrayList<>();
-        Menu.students.add(student1);
-        Menu.students.add(student2);
-        Menu.gradeManager = gradeManager;
+        // Initialize ApplicationContext with test data
+        ArrayList<Student> students = ApplicationContext.getInstance().getStudents();
+        students.clear();
+        students.add(student1);
+        students.add(student2);
     }
 
     @Test

@@ -1,5 +1,7 @@
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
+import java.util.List;
 
 import exception.GradeStorageFullException;
 import exception.StudentNotFoundException;
@@ -49,40 +51,41 @@ public class GradeManager implements IGradeManager {
         if (s == null) {
             throw new StudentNotFoundException("Student with ID " + studentId + " does not exist.");
         }
-        ArrayList<Grade> studentGrades = new ArrayList<>();
-
-        // Collect grades
-        for (int i = 0; i < gradeCount; i++) {
-            if (grades[i].getStudentId() == studentId) {
-                studentGrades.add(grades[i]);
-            }
-        }
+        
+        // Use Stream API to collect and sort grades
+        ArrayList<Grade> studentGrades = Arrays.stream(grades)
+                .limit(gradeCount)
+                .filter(g -> g.getStudentId() == studentId)
+                .sorted(Comparator.comparing(Grade::getDate).reversed())
+                .collect(ArrayList::new, List::add, List::addAll);
 
         if (studentGrades.isEmpty()) {
             System.out.println("No grades recorded for this student.");
             return;
         }
 
-        studentGrades.sort(Comparator.comparing(Grade::getDate).reversed());
-
         System.out.println("\n--------- GRADE REPORT FOR STUDENT " + studentId + " ---------");
         System.out.printf("%-8s %-12s %-20s %-10s %-8s\n",
                 "GradeID", "Date", "Subject", "Type", "Grade");
         System.out.println("-------------------------------------------------------------");
 
-        for (Grade g : studentGrades) {
-            Student student = findStudentById(g.getStudentId());
-            String status = (student != null) ? student.getStatus() : "N/A";
-
-            System.out.printf("%-8d %-12s %-20s %-10s %-8.2f %-8s\n",
-                    g.getGradeId(),
-                    g.getDate(),
-                    g.getSubject().getSubjectName(),
-                    g.getSubject().getSubjectType(),
-                    g.getGrade(),
-                    status
-            );
-        }
+        // Use Stream API to display grades
+        Arrays.stream(grades)
+                .limit(gradeCount)
+                .filter(g -> g.getStudentId() == studentId)
+                .sorted(Comparator.comparing(Grade::getDate).reversed())
+                .forEach(g -> {
+                    Student student = findStudentById(g.getStudentId());
+                    String status = (student != null) ? student.getStatus() : "N/A";
+                    System.out.printf("%-8d %-12s %-20s %-10s %-8.2f %-8s\n",
+                            g.getGradeId(),
+                            g.getDate(),
+                            g.getSubject().getSubjectName(),
+                            g.getSubject().getSubjectType(),
+                            g.getGrade(),
+                            status
+                    );
+                });
 
         System.out.println("-------------------------------------------------------------");
 
@@ -104,36 +107,22 @@ public class GradeManager implements IGradeManager {
 
     @Override
     public double calculateCoreAverage(int studentId) {
-        double total = 0;
-        int count = 0;
-
-        for (int i = 0; i < gradeCount; i++) {
-            Grade g = grades[i];
-            if (g.getStudentId() == studentId &&
-                    g.getSubject().getSubjectType().equals("Core")) {
-                total += g.getGrade();
-                count++;
-            }
-        }
-
-        return count == 0 ? -1 : total / count;
+        return Arrays.stream(grades)
+                .limit(gradeCount)
+                .filter(g -> g.getStudentId() == studentId && g.getSubject().getSubjectType().equals("Core"))
+                .mapToDouble(Grade::getGrade)
+                .average()
+                .orElse(-1);
     }
 
     @Override
     public double calculateElectiveAverage(int studentId) {
-        double total = 0;
-        int count = 0;
-
-        for (int i = 0; i < gradeCount; i++) {
-            Grade g = grades[i];
-            if (g.getStudentId() == studentId &&
-                    g.getSubject().getSubjectType().equals("Elective")) {
-                total += g.getGrade();
-                count++;
-            }
-        }
-
-        return count == 0 ? -1 : total / count;
+        return Arrays.stream(grades)
+                .limit(gradeCount)
+                .filter(g -> g.getStudentId() == studentId && g.getSubject().getSubjectType().equals("Elective"))
+                .mapToDouble(Grade::getGrade)
+                .average()
+                .orElse(-1);
     }
 
     @Override
@@ -142,17 +131,12 @@ public class GradeManager implements IGradeManager {
             throw new StudentNotFoundException("Student with ID " + studentId + " not found.");
         }
 
-        double total = 0;
-        int count = 0;
-
-        for (int i = 0; i < gradeCount; i++) {
-            if (grades[i].getStudentId() == studentId) {
-                total += grades[i].getGrade();
-                count++;
-            }
-        }
-
-        return count == 0 ? -1 : total / count;
+        return Arrays.stream(grades)
+                .limit(gradeCount)
+                .filter(g -> g.getStudentId() == studentId)
+                .mapToDouble(Grade::getGrade)
+                .average()
+                .orElse(-1);
     }
 
     @Override
@@ -162,22 +146,19 @@ public class GradeManager implements IGradeManager {
 
     @Override
     public int getSubjectCountForStudent(int studentId) {
-        int count = 0;
-        for (int i = 0; i < gradeCount; i++) {
-            if (grades[i].getStudentId() == studentId) count++;
-        }
-        return count;
+        return (int) Arrays.stream(grades)
+                .limit(gradeCount)
+                .filter(g -> g.getStudentId() == studentId)
+                .count();
     }
 
     @Override
     public ArrayList<Integer> getGradesForStudent(int studentId) {
-        ArrayList<Integer> studentGrades = new ArrayList<>();
-        for (int i = 0; i < gradeCount; i++) {
-            if (grades[i].getStudentId() == studentId) {
-                studentGrades.add((int) grades[i].getGrade());
-            }
-        }
-        return studentGrades;
+        return Arrays.stream(grades)
+                .limit(gradeCount)
+                .filter(g -> g.getStudentId() == studentId)
+                .map(g -> (int) g.getGrade())
+                .collect(ArrayList::new, List::add, List::addAll);
     }
 
     // Safe wrapper for external callers that should not throw
@@ -189,28 +170,35 @@ public class GradeManager implements IGradeManager {
         }
     }
 
-    // ---------------- Helper methods ----------------
+    // Helper methods
     private void updateStudentAverage(int studentId) {
-        double total = 0;
-        int count = 0;
-        for (int i = 0; i < gradeCount; i++) {
-            if (grades[i].getStudentId() == studentId) {
-                total += grades[i].getGrade();
-                count++;
-            }
-        }
+        double average = Arrays.stream(grades)
+                .limit(gradeCount)
+                .filter(g -> g.getStudentId() == studentId)
+                .mapToDouble(Grade::getGrade)
+                .average()
+                .orElse(-1);
 
         Student s = findStudentById(studentId);
-        if (s != null && count > 0) {
-            s.setAverageGrade(total / count);
+        if (s != null && average > 0) {
+            s.setAverageGrade(average);
         }
     }
 
     /**
-     * Optimized student lookup.
-     * Big-O: O(1) average using HashMap-backed index (Menu.studentIndex).
+     * Optimized student lookup using Stream API.
+     * First tries HashMap-backed index (ApplicationContext.studentIndex) O(1),
+     * Falls back to Stream search O(n) if index is empty.
      */
     private Student findStudentById(int studentId) {
-        return Menu.studentIndex.get(String.valueOf(studentId));
+        Student fromIndex = ApplicationContext.getInstance().getStudentIndex().get(String.valueOf(studentId));
+        if (fromIndex != null) {
+            return fromIndex;
+        }
+        // Fallback: search in ApplicationContext.students using streams
+        return ApplicationContext.getInstance().getStudents().stream()
+                .filter(s -> s.getId() == studentId)
+                .findFirst()
+                .orElse(null);
     }
 }

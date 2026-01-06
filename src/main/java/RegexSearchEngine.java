@@ -30,7 +30,6 @@ public class RegexSearchEngine {
         int totalStudents;
         Map<String, Integer> distributionByType;
         Map<String, Integer> distributionByStatus;
-        double averageMatchScore;
         
         SearchStats() {
             this.distributionByType = new HashMap<>();
@@ -39,7 +38,7 @@ public class RegexSearchEngine {
     }
 
     private SearchStats stats;
-    private List<SearchResult> currentResults;
+    private final List<SearchResult> currentResults;
     private String lastPattern;
     private boolean caseInsensitive;
 
@@ -58,13 +57,13 @@ public class RegexSearchEngine {
         
         currentResults.clear();
         stats = new SearchStats();
-        stats.totalStudents = Menu.students.size();
+        stats.totalStudents = ApplicationContext.getInstance().getStudents().size();
         
         try {
             int flags = caseInsensitive ? Pattern.CASE_INSENSITIVE : 0;
             Pattern pattern = Pattern.compile(domainPattern, flags);
             
-            for (Student s : Menu.students) {
+            for (Student s : ApplicationContext.getInstance().getStudents()) {
                 stats.totalScanned++;
                 Student student = s;
                 try {
@@ -102,13 +101,13 @@ public class RegexSearchEngine {
         
         currentResults.clear();
         stats = new SearchStats();
-        stats.totalStudents = Menu.students.size();
+        stats.totalStudents = ApplicationContext.getInstance().getStudents().size();
         
         try {
             int flags = caseInsensitive ? Pattern.CASE_INSENSITIVE : 0;
             Pattern pattern = Pattern.compile(idPattern, flags);
             
-            for (Student s : Menu.students) {
+            for (Student s : ApplicationContext.getInstance().getStudents()) {
                 stats.totalScanned++;
                 Student student = s;
                 try {
@@ -146,13 +145,13 @@ public class RegexSearchEngine {
         
         currentResults.clear();
         stats = new SearchStats();
-        stats.totalStudents = Menu.students.size();
+        stats.totalStudents = ApplicationContext.getInstance().getStudents().size();
         
         try {
             int flags = caseInsensitive ? Pattern.CASE_INSENSITIVE : 0;
             Pattern pattern = Pattern.compile(namePattern, flags);
             
-            for (Student s : Menu.students) {
+            for (Student s : ApplicationContext.getInstance().getStudents()) {
                 stats.totalScanned++;
                 Student student = s;
                 try {
@@ -189,13 +188,13 @@ public class RegexSearchEngine {
         
         currentResults.clear();
         stats = new SearchStats();
-        stats.totalStudents = Menu.students.size();
+        stats.totalStudents = ApplicationContext.getInstance().getStudents().size();
         
         try {
             int flags = caseInsensitive ? Pattern.CASE_INSENSITIVE : 0;
             Pattern compiledPattern = Pattern.compile(pattern, flags);
             
-            for (Student s : Menu.students) {
+            for (Student s : ApplicationContext.getInstance().getStudents()) {
                 stats.totalScanned++;
                 Student student = s;
                 try {
@@ -334,7 +333,7 @@ public class RegexSearchEngine {
             System.out.println("   Type: " + s.getType());
             System.out.println("   Status: " + s.getStatus());
             System.out.println("   Average Grade: " + String.format("%.2f", s.getAverageGrade()));
-            System.out.println("   Subjects Enrolled: " + Menu.gradeManager.getSubjectCountForStudent(s.id));
+            System.out.println("   Subjects Enrolled: " + ApplicationContext.getInstance().getGradeManager().getSubjectCountForStudent(s.id));
             System.out.println("   Matched Field: " + result.matchedField + " → " + result.highlightedMatch);
         }
 
@@ -480,12 +479,12 @@ public class RegexSearchEngine {
         
         currentResults.clear();
         stats = new SearchStats();
-        stats.totalStudents = Menu.students.size();
+        stats.totalStudents = ApplicationContext.getInstance().getStudents().size();
         
         try {
             Pattern pattern = Pattern.compile(areaCodePattern);
             
-            for (Student s : Menu.students) {
+            for (Student s : ApplicationContext.getInstance().getStudents()) {
                 stats.totalScanned++;
                 String areaCode = extractAreaCode(s.getPhone());
                 Matcher matcher = pattern.matcher(areaCode);
@@ -584,3 +583,4 @@ public class RegexSearchEngine {
         return !currentResults.isEmpty();
     }
 }
+

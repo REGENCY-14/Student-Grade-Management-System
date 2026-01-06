@@ -2,13 +2,13 @@
 
 ## Overview
 
-This is a **console-based Student Grade Management System** built using Java 25. The system allows you to:
+This is a **console-based Student Grade Management System** built using Java 25 with modern **Stream-based data processing**. The system allows you to:
 
 * Add and manage students (Regular & Honors).
 * Record grades for different subjects (Core & Elective).
 * View all students with details including average grades and status.
 * View detailed grade reports for individual students.
-* Calculate averages and display performance summaries.
+* Calculate averages and display performance summaries using Java Streams API.
 * **Generate concurrent batch reports with progress tracking**
 * **Monitor real-time statistics with auto-refresh dashboard**
 * **Schedule automated tasks for system maintenance**
@@ -17,7 +17,31 @@ This is a **console-based Student Grade Management System** built using Java 25.
 
 ---
 
-## Advanced Features
+## Core Architecture
+
+### Stream-Based Data Processing
+
+All data processing throughout the system uses Java Streams API exclusively, providing functional programming paradigms:
+
+* **GradeManager**: Uses `Arrays.stream()` for filtering, aggregating, and computing statistics on grades
+  - `calculateCoreAverage()`: Stream-based average calculation with filter
+  - `calculateElectiveAverage()`: Stream filtering and numeric operations
+  - `calculateOverallAverage()`: Composite stream calculations
+  - `getGradesForStudent()`: Stream collect operations
+  - `viewGradeByStudent()`: Stream filtering and sorting
+  
+* **StudentService**: Stream-based filtering and collection operations
+  - `findStudentById()`: Stream filter and findFirst
+  - `getStudentsByFilter()`: Predicate-based stream filtering
+  - `getValidStudents()`: Stream validation filters
+  - `countStudentsByType()`: Stream count operations
+  
+* **StatsCalculator**: Background thread using Stream API for statistical aggregation
+  - `performStatsCalculation()`: Complex stream collectors for statistics building
+  - Grade distribution mapping with stream aggregation
+  - Concurrent statistics updates with stream operations
+
+---
 
 ### 1. Real-Time Statistics Dashboard (Option 11)
 - **Live calculation** of student statistics every 5 seconds
@@ -137,9 +161,10 @@ This is a **console-based Student Grade Management System** built using Java 25.
 
 12. **Menu Navigation**
 
-    * Hierarchical menu system with 15 options.
+    * Hierarchical menu system with 16 options.
     * Clear section organization.
     * Interactive prompts and guidance.
+    * All data processing uses Stream API internally (transparent to user).
 
 ---
 
@@ -153,8 +178,8 @@ This is a **console-based Student Grade Management System** built using Java 25.
 * **CoreSubject & ElectiveSubject**: Extend `Subject`, define mandatory and optional subjects.
 * **Grade**: Represents a student's grade for a subject, with unique grade ID, student ID, subject, grade value, and date.
 * **GradeManager**: Manages all grades, calculates averages, determines PASS/FAIL, and displays grade reports.
-* **StudentManagement**: Manages student array, adding, searching, viewing all students, and calculating class average.
-* **Menu**: Handles the console-based user interface and navigation with 15 menu options.
+* **Menu**: Handles the console-based user interface and navigation with 16 menu options.
+* **StudentService**: Stream-based student management, filtering, and validation.
 * **StatisticsDashboard**: Real-time statistics display with auto-refresh (1 second), color-coded output, and interactive controls.
 * **StatsCalculator**: Background daemon thread calculating statistics every 5 seconds with ConcurrentHashMap for thread safety.
 * **ConcurrentReportGenerator**: Multi-threaded batch report generation with progress tracking, configurable thread pool (2-8 threads).

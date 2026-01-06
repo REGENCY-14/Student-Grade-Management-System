@@ -26,13 +26,13 @@ public abstract class Student implements IStudentInfo, IStudentAcademic, IStuden
     // IStudentAcademic
     public double getAverageGrade() { return averageGrade; }
     public void setAverageGrade(double grade) { this.averageGrade = grade; }
-    public int getEnrolledSubjects() { return Menu.gradeManager.getSubjectCountForStudent(this.id); }
+    public int getEnrolledSubjects() { return ApplicationContext.getInstance().getGradeManager().getSubjectCountForStudent(this.id); }
     public double computeGPA() {
         int subjectCount = getEnrolledSubjects();
         if (subjectCount == 0) return 0.0;
 
         double totalGPA = 0.0;
-        for (int grade : Menu.gradeManager.getGradesForStudent(this.id)) {
+        for (int grade : ApplicationContext.getInstance().getGradeManager().getGradesForStudent(this.id)) {
             totalGPA += gradeToGPA(grade);
         }
         return totalGPA / subjectCount;

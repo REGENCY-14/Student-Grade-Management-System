@@ -1,4 +1,3 @@
-import exception.StudentNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
@@ -18,10 +17,11 @@ class IntegrationTests {
         regularStudent = new RegularStudent(1001, "John Doe", 18, "john@email.com", "1234567890");
         honorsStudent = new HonorsStudent(1002, "Jane Smith", 19, "jane@email.com", "0987654321");
 
-        Menu.students = new ArrayList<>();
-        Menu.students.add(regularStudent);
-        Menu.students.add(honorsStudent);
-        Menu.gradeManager = gradeManager;
+        // Initialize ApplicationContext with test data
+        ArrayList<Student> students = ApplicationContext.getInstance().getStudents();
+        students.clear();
+        students.add(regularStudent);
+        students.add(honorsStudent);
     }
 
     @Test
