@@ -1,2 +1,6 @@
 2026-01-06T14:48:18.720112600Z|3|BULK_IMPORT|file=./imports/sample_grades.csv,total=13,success=0,failed=13|10491|SUCCESS|
 2026-01-06T14:52:51.413559100Z|3|BULK_IMPORT|file=./imports/sample_grades.csv,total=13,success=0,failed=13|134058|SUCCESS|
+2026-01-06T15:05:03.887189700Z|3|BULK_IMPORT_JSON|file=null,total=0,success=0,failed=0|8883|SUCCESS|
+2026-01-06T15:16:05.072905200Z|3|BULK_IMPORT_CSV|file=null,total=0,success=0,failed=0|9953|SUCCESS|
+2026-01-06T15:16:26.224112800Z|3|BULK_IMPORT_STUDENTS|file=./imports/sample_grades.csv,total=12,success=0,failed=12|11754|SUCCESS|
+2026-01-06T15:16:47.209253400Z|3|BULK_IMPORT_CSV|file=null,total=0,success=0,failed=0|7830|SUCCESS|

@@ -1,0 +1,212 @@
+[
+  {
+    "studentId": 1001,
+    "subjectName": "Mathematics",
+    "subjectType": "Core",
+    "grade": 85.5,
+    "date": "2026-01-05"
+  },
+  {
+    "studentId": 1001,
+    "subjectName": "Physics",
+    "subjectType": "Core",
+    "grade": 78.0,
+    "date": "2026-01-05"
+  },
+  {
+    "studentId": 1001,
+    "subjectName": "Chemistry",
+    "subjectType": "Core",
+    "grade": 92.5,
+    "date": "2026-01-05"
+  },
+  {
+    "studentId": 1002,
+    "subjectName": "Mathematics",
+    "subjectType": "Core",
+    "grade": 88.0,
+    "date": "2026-01-05"
+  },
+  {
+    "studentId": 1002,
+    "subjectName": "Biology",
+    "subjectType": "Core",
+    "grade": 91.0,
+    "date": "2026-01-05"
+  },
+  {
+    "studentId": 1002,
+    "subjectName": "English",
+    "subjectType": "Core",
+    "grade": 87.5,
+    "date": "2026-01-05"
+  },
+  {
+    "studentId": 1003,
+    "subjectName": "History",
+    "subjectType": "Elective",
+    "grade": 76.5,
+    "date": "2026-01-05"
+  },
+  {
+    "studentId": 1003,
+    "subjectName": "Music",
+    "subjectType": "Elective",
+    "grade": 95.0,
+    "date": "2026-01-05"
+  },
+  {
+    "studentId": 1003,
+    "subjectName": "Mathematics",
+    "subjectType": "Core",
+    "grade": 82.0,
+    "date": "2026-01-05"
+  },
+  {
+    "studentId": 1004,
+    "subjectName": "Computer Science",
+    "subjectType": "Elective",
+    "grade": 94.5,
+    "date": "2026-01-05"
+  },
+  {
+    "studentId": 1004,
+    "subjectName": "Mathematics",
+    "subjectType": "Core",
+    "grade": 89.0,
+    "date": "2026-01-05"
+  },
+  {
+    "studentId": 1004,
+    "subjectName": "Physics",
+    "subjectType": "Core",
+    "grade": 86.5,
+    "date": "2026-01-05"
+  },
+  {
+    "studentId": 1005,
+    "subjectName": "Art",
+    "subjectType": "Elective",
+    "grade": 90.0,
+    "date": "2026-01-05"
+  },
+  {
+    "studentId": 1005,
+    "subjectName": "English",
+    "subjectType": "Core",
+    "grade": 84.5,
+    "date": "2026-01-05"
+  },
+  {
+    "studentId": 1005,
+    "subjectName": "Chemistry",
+    "subjectType": "Core",
+    "grade": 88.0,
+    "date": "2026-01-05"
+  },
+  {
+    "studentId": 1006,
+    "subjectName": "Mathematics",
+    "subjectType": "Core",
+    "grade": 92.0,
+    "date": "2026-01-05"
+  },
+  {
+    "studentId": 1006,
+    "subjectName": "Geography",
+    "subjectType": "Elective",
+    "grade": 79.5,
+    "date": "2026-01-05"
+  },
+  {
+    "studentId": 1006,
+    "subjectName": "Physics",
+    "subjectType": "Core",
+    "grade": 85.0,
+    "date": "2026-01-05"
+  },
+  {
+    "studentId": 1007,
+    "subjectName": "Biology",
+    "subjectType": "Core",
+    "grade": 93.5,
+    "date": "2026-01-05"
+  },
+  {
+    "studentId": 1007,
+    "subjectName": "Chemistry",
+    "subjectType": "Core",
+    "grade": 91.5,
+    "date": "2026-01-05"
+  },
+  {
+    "studentId": 1007,
+    "subjectName": "Music",
+    "subjectType": "Elective",
+    "grade": 88.5,
+    "date": "2026-01-05"
+  },
+  {
+    "studentId": 1008,
+    "subjectName": "Mathematics",
+    "subjectType": "Core",
+    "grade": 77.0,
+    "date": "2026-01-05"
+  },
+  {
+    "studentId": 1008,
+    "subjectName": "History",
+    "subjectType": "Elective",
+    "grade": 82.0,
+    "date": "2026-01-05"
+  },
+  {
+    "studentId": 1008,
+    "subjectName": "English",
+    "subjectType": "Core",
+    "grade": 80.5,
+    "date": "2026-01-05"
+  },
+  {
+    "studentId": 1009,
+    "subjectName": "Physics",
+    "subjectType": "Core",
+    "grade": 96.0,
+    "date": "2026-01-05"
+  },
+  {
+    "studentId": 1009,
+    "subjectName": "Computer Science",
+    "subjectType": "Elective",
+    "grade": 97.5,
+    "date": "2026-01-05"
+  },
+  {
+    "studentId": 1009,
+    "subjectName": "Mathematics",
+    "subjectType": "Core",
+    "grade": 95.5,
+    "date": "2026-01-05"
+  },
+  {
+    "studentId": 1010,
+    "subjectName": "Art",
+    "subjectType": "Elective",
+    "grade": 86.0,
+    "date": "2026-01-05"
+  },
+  {
+    "studentId": 1010,
+    "subjectName": "Geography",
+    "subjectType": "Elective",
+    "grade": 81.5,
+    "date": "2026-01-05"
+  },
+  {
+    "studentId": 1010,
+    "subjectName": "English",
+    "subjectType": "Core",
+    "grade": 83.0,
+    "date": "2026-01-05"
+  }
+]
