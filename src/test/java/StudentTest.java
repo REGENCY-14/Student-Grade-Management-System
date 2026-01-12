@@ -15,7 +15,6 @@ class StudentTest {
     void setUp() {
         regularStudent = new RegularStudent(1001, "John Doe", 18, "john@email.com", "1234567890");
         honorsStudent = new HonorsStudent(1002, "Jane Smith", 19, "jane@email.com", "0987654321");
-        // ApplicationContext is initialized with test data if needed
     }
 
     @Test

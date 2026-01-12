@@ -45,7 +45,7 @@ public abstract class Student implements IStudentInfo, IStudentAcademic, IStuden
         return totalGPA / subjectCount;
     }
     public void updateAverageGPA() { this.averageGrade = computeGPA(); }
-    double gradeToGPA(int grade) {
+    public double gradeToGPA(int grade) {
         if (grade >= 80) return 4.0;
         if (grade >= 70) return 3.0;
         if (grade >= 60) return 2.0;

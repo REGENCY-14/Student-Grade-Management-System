@@ -21,7 +21,8 @@ class IntegrationTests {
 
     @BeforeEach
     void setUp() {
-        gradeManager = new GradeManager();
+        gradeManager = ApplicationContext.getInstance().getGradeManager();
+        gradeManager.clear(); // Clear any previous grades
         regularStudent = new RegularStudent(1001, "John Doe", 18, "john@email.com", "1234567890");
         honorsStudent = new HonorsStudent(1002, "Jane Smith", 19, "jane@email.com", "0987654321");
 

@@ -16,6 +16,11 @@ public class GradeManager implements IGradeManager {
     public Grade[] grades = new Grade[200];
     private int gradeCount = 0;
 
+    public void clear() {
+        Arrays.fill(grades, null);
+        gradeCount = 0;
+    }
+
     @Override
     public void addGrade(Grade grade) throws StudentNotFoundException, GradeStorageFullException {
         Student s = findStudentById(grade.getStudentId());
