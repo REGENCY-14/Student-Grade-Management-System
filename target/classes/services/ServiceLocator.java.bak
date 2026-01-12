@@ -1,0 +1,57 @@
+package services;
+
+/**
+ * Dependency Inversion Principle (DIP): Service locator for core dependencies
+ * Provides a centralized way to access services without tight coupling
+ * This is an alternative to constructor injection for legacy code
+ * 
+ * Best Practice: Migrate to constructor injection gradually for new code
+ */
+public class ServiceLocator {
+    private static ServiceLocator instance;
+    
+    private IGradeRepository gradeRepository;
+    private generators.IIdGenerator studentIdGenerator;
+    private generators.IIdGenerator gradeIdGenerator;
+
+    private ServiceLocator() {
+    }
+
+    public static synchronized ServiceLocator getInstance() {
+        if (instance == null) {
+            instance = new ServiceLocator();
+        }
+        return instance;
+    }
+
+    public void setGradeRepository(IGradeRepository gradeRepository) {
+        this.gradeRepository = gradeRepository;
+    }
+
+    public IGradeRepository getGradeRepository() {
+        return gradeRepository;
+    }
+
+    public void setStudentIdGenerator(generators.IIdGenerator generator) {
+        this.studentIdGenerator = generator;
+    }
+
+    public generators.IIdGenerator getStudentIdGenerator() {
+        return studentIdGenerator;
+    }
+
+    public void setGradeIdGenerator(generators.IIdGenerator generator) {
+        this.gradeIdGenerator = generator;
+    }
+
+    public generators.IIdGenerator getGradeIdGenerator() {
+        return gradeIdGenerator;
+    }
+
+    /**
+     * Reset service locator (useful for testing)
+     */
+    public static synchronized void reset() {
+        instance = null;
+    }
+}

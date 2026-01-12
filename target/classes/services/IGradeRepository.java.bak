@@ -1,0 +1,56 @@
+package services;
+
+import java.util.List;
+
+/**
+ * Dependency Inversion Principle (DIP): Interface for grade data access
+ * Separates grade storage from business logic
+ * Allows swapping implementations (File, Database, Memory, etc.) without changing business code
+ * Single Responsibility Principle (SRP): Only handles grade retrieval and storage
+ */
+public interface IGradeRepository {
+    /**
+     * Add a grade to the repository
+     * @param grade grade to add
+     * @return true if successful, false otherwise
+     */
+    boolean addGrade(Grade grade) throws Exception;
+
+    /**
+     * Get all grades for a student
+     * @param studentId student ID
+     * @return list of grades
+     */
+    List<Grade> getGradesForStudent(int studentId);
+
+    /**
+     * Get all grades in the repository
+     * @return list of all grades
+     */
+    List<Grade> getAllGrades();
+
+    /**
+     * Get grade by ID
+     * @param gradeId grade ID
+     * @return grade object or null if not found
+     */
+    Grade getGradeById(int gradeId);
+
+    /**
+     * Remove a grade
+     * @param gradeId grade ID to remove
+     * @return true if successful, false otherwise
+     */
+    boolean removeGrade(int gradeId);
+
+    /**
+     * Get total count of grades
+     * @return count
+     */
+    int getGradeCount();
+
+    /**
+     * Clear all grades
+     */
+    void clearAllGrades();
+}
