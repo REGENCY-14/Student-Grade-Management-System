@@ -1,6 +1,8 @@
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
+import core.CoreSubject;
+import core.ElectiveSubject;
 import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("Subject Class Tests")

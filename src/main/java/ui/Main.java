@@ -2,6 +2,8 @@ package ui;
 
 import context.ApplicationContext;
 import manager.CacheManager;
+import scheduler.TaskScheduler;
+import core.Student;
 
 /**
  * Main entry point for the Student Grade Management System

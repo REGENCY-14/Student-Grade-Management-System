@@ -7,12 +7,16 @@ import manager.GradeManager;
 import manager.CacheManager;
 import models.StudentService;
 import models.StudentFactory;
+import models.HonorsStudent;
 import search.RegexSearchEngine;
 import search.ConcurrentReportGenerator;
 import manager.FileFormatManager;
 import scheduler.ScheduledTask;
 import analytics.StatisticsDashboard;
 import audit.AuditLogger;
+import core.Subject;
+import core.CoreSubject;
+import core.ElectiveSubject;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -410,7 +414,10 @@ public class Menu {
         for (int i = 0; i < gradeManager.getGradeCount(); i++) {
             Grade g = gradeManager.grades[i];
             if (g.getStudentId() == studentId) {
-                double gpaPoints = student.gradeToGPA((int) g.getGrade());
+                double gpaPoints = (g.getGrade() >= 80 ? 4.0 :
+                                    g.getGrade() >= 70 ? 3.0 :
+                                    g.getGrade() >= 60 ? 2.0 :
+                                    g.getGrade() >= 50 ? 1.0 : 0.0);
                 System.out.printf("%-20s %-10.2f %-10.2f\n",
                         g.getSubject().getSubjectName(),
                         g.getGrade(),

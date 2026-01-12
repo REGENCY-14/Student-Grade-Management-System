@@ -1,6 +1,8 @@
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
+import models.RegularStudent;
+import models.HonorsStudent;
 import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("Student Class Tests")
