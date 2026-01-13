@@ -8,6 +8,7 @@ search\ConcurrentReportGenerator$ReportStats.class
 ui\Main.class
 search\ConcurrentReportGenerator$ProgressTracker.class
 scheduler\TaskScheduler$TaskExecutionLog.class
+ui\FileOperationsHandler.class
 models\StudentFactory.class
 search\RegexSearchEngine$SearchResult.class
 interfaces\IStudentType.class
@@ -17,10 +18,12 @@ generators\IIdGenerator.class
 models\StudentService$1.class
 validators\StudentDataValidator$StudentData.class
 context\ApplicationContext.class
+ui\StreamProcessingHandler.class
 calculations\GradeCalculator.class
 manager\CacheManager$CacheReport.class
 search\RegexSearchEngine.class
 exception\InvalidGradeException.class
+ui\AdvancedFeaturesHandler.class
 exception\SubjectNotFoundException.class
 imports\GenerateSampleBinaryData.class
 models\HonorsStudent.class
@@ -29,6 +32,7 @@ audit\AuditLogger.class
 manager\FileFormatManager.class
 scheduler\TaskScheduler$1.class
 ui\Menu.class
+ui\QueryGradeHandler.class
 imports\GenerateSampleBinaryData$GradeData.class
 scheduler\ScheduledTask$TaskType.class
 context\IStudentEligibility.class
@@ -65,9 +69,12 @@ core\CoreSubject.class
 audit\AuditLogger$AuditStats.class
 interfaces\IStudentIdentity.class
 analytics\StatsCalculator.class
+ui\GradeMenuHandler.class
 exception\FileImportException.class
 models\RegularStudent.class
+ui\StudentMenuHandler.class
 exception\GradeStorageFullException.class
 manager\CacheManager.class
 audit\AuditLogger$AuditEntry.class
+ui\SearchMenuHandler.class
 generators\SequentialIdGenerator.class

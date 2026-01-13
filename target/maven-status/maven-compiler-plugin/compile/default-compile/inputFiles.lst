@@ -41,8 +41,15 @@ C:\Users\ZakariaOsman\IdeaProjects\StudentGradeManagementSystem\src\main\java\sc
 C:\Users\ZakariaOsman\IdeaProjects\StudentGradeManagementSystem\src\main\java\scheduler\TaskScheduler.java
 C:\Users\ZakariaOsman\IdeaProjects\StudentGradeManagementSystem\src\main\java\search\ConcurrentReportGenerator.java
 C:\Users\ZakariaOsman\IdeaProjects\StudentGradeManagementSystem\src\main\java\search\RegexSearchEngine.java
+C:\Users\ZakariaOsman\IdeaProjects\StudentGradeManagementSystem\src\main\java\ui\AdvancedFeaturesHandler.java
+C:\Users\ZakariaOsman\IdeaProjects\StudentGradeManagementSystem\src\main\java\ui\FileOperationsHandler.java
+C:\Users\ZakariaOsman\IdeaProjects\StudentGradeManagementSystem\src\main\java\ui\GradeMenuHandler.java
 C:\Users\ZakariaOsman\IdeaProjects\StudentGradeManagementSystem\src\main\java\ui\Main.java
 C:\Users\ZakariaOsman\IdeaProjects\StudentGradeManagementSystem\src\main\java\ui\Menu.java
+C:\Users\ZakariaOsman\IdeaProjects\StudentGradeManagementSystem\src\main\java\ui\QueryGradeHandler.java
+C:\Users\ZakariaOsman\IdeaProjects\StudentGradeManagementSystem\src\main\java\ui\SearchMenuHandler.java
+C:\Users\ZakariaOsman\IdeaProjects\StudentGradeManagementSystem\src\main\java\ui\StreamProcessingHandler.java
+C:\Users\ZakariaOsman\IdeaProjects\StudentGradeManagementSystem\src\main\java\ui\StudentMenuHandler.java
 C:\Users\ZakariaOsman\IdeaProjects\StudentGradeManagementSystem\src\main\java\validators\AgeValidator.java
 C:\Users\ZakariaOsman\IdeaProjects\StudentGradeManagementSystem\src\main\java\validators\EmailValidator.java
 C:\Users\ZakariaOsman\IdeaProjects\StudentGradeManagementSystem\src\main\java\validators\IValidator.java
